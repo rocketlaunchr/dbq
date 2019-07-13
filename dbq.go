@@ -49,11 +49,11 @@ type StructorConfig struct {
 	WeaklyTypedInput bool
 }
 
-// SingleResult is a convenience option for the common case of expecting
+// SingleResult is a convenient option for the common case of expecting
 // a single result from a query.
 var SingleResult = &Options{SingleResult: true}
 
-// Panic is a convenience option for the common case of panicing
+// Panic is a convenient option for the common case of panicking
 // upon encountering an error.
 var Panic = &Options{Panic: true}
 
@@ -86,7 +86,7 @@ type Options struct {
 }
 
 // E is a wrapper around the Q function. It is used for "Exec" queries such as insert, update and delete.
-// It also returns a sql.Result interface instead of a empty interface.
+// It also returns a sql.Result interface instead of an empty interface.
 func E(ctx context.Context, pool ExecContexter, query string, options *Options, args ...interface{}) (stdSql.Result, error) {
 
 	res, err := Q(ctx, pool, query, options, args...)
@@ -97,14 +97,14 @@ func E(ctx context.Context, pool ExecContexter, query string, options *Options, 
 	return res.(stdSql.Result), nil
 }
 
-// Q is a convenience function that is used for inserting, updating, deleting and querying a SQL database.
-// For inserts, updates and deletes, a sql.Result is returned.
-// For queries, a []map[string]interface{} is ordinarily returned. Each result (item in slice) contains
-// a map where the keys are the table columns and the values are the data.
+// Q is a convenience function that is used for inserting, updating, deleting, and querying a SQL database.
+// For inserts, updates, and deletes, a sql.Result is returned.
+// For queries, a []map[string]interface{} is ordinarily returned. Each result (a item in slice) contains
+// a map where the keys are the table columns, and the values are the data.
 // When a ConcreteStruct is provided via the Options, the mapstructure package is used to automatically
 // return []structs instead.
 //
-// NOTE: sql.ErrNoRows is never returned as an error. Usually a single item slice is returned, unless the
+// NOTE: sql.ErrNoRows is never returned as an error. Usually, a single item slice is returned, unless the
 // behavior is modified by the SingleResult Option.
 func Q(ctx context.Context, pool SQLBasic, query string, options *Options, args ...interface{}) (out interface{}, rErr error) {
 

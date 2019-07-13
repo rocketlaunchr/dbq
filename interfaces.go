@@ -7,12 +7,12 @@ import (
 	stdSql "database/sql"
 )
 
-// ExecContexter is for modifying the database state
+// ExecContexter is for modifying the database state.
 type ExecContexter interface {
 	ExecContext(ctx context.Context, query string, args ...interface{}) (stdSql.Result, error)
 }
 
-// QueryContexter is for querying the database
+// QueryContexter is for querying the database.
 type QueryContexter interface {
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*stdSql.Rows, error)
 }
