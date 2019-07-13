@@ -57,6 +57,7 @@ var SingleResult = &Options{SingleResult: true}
 // upon encountering an error.
 var Panic = &Options{Panic: true}
 
+// Options is used to modify the default behavior.
 type Options struct {
 
 	// ConcreteStruct can be set to any concrete struct (not a pointer).
@@ -86,14 +87,7 @@ type Options struct {
 
 // E is a wrapper around the Q function. It is used for "Exec" queries such as insert, update and delete.
 // It also returns a sql.Result interface instead of a empty interface.
-func E(ctx context.Context, pool SQLBasic, query string, options *Options, args ...interface{}) (stdSql.Result, error) {
-
-	query2 := strings.ToLower(strings.TrimSpace(query))
-
-	if !(strings.HasPrefix(query2, "insert") || strings.HasPrefix(query2, "update") ||
-		strings.HasPrefix(query2, "delete")) {
-		panic("incorrect query type")
-	}
+func E(ctx context.Context, pool ExecContexter, query string, options *Options, args ...interface{}) (stdSql.Result, error) {
 
 	res, err := Q(ctx, pool, query, options, args...)
 	if err != nil {
@@ -124,23 +118,28 @@ func Q(ctx context.Context, pool SQLBasic, query string, options *Options, args 
 	}
 
 	defer func() {
-		if rErr != nil && o.Panic {
-			panic(rErr)
-		}
-		if rErr == nil && wasQuery && o.SingleResult {
-			rows := reflect.ValueOf(out)
-			if rows.Len() == 0 {
-				out = nil
-			} else {
-				row := rows.Index(0)
-				out = row.Interface()
+		if rErr == nil {
+			if wasQuery && o.SingleResult {
+				rows := reflect.ValueOf(out)
+				if rows.Len() == 0 {
+					out = nil
+				} else {
+					row := rows.Index(0)
+					out = row.Interface()
+				}
+			}
+		} else {
+			if o.Panic {
+				panic(rErr)
 			}
 		}
 	}()
 
 	query = strings.TrimSpace(query)
+	queryType := query[0:6]
 
 	if len(args) == 1 {
+		// Convert slice to []interface{}
 		if arg := reflect.ValueOf(args[0]); arg.Kind() == reflect.Slice {
 			newArgs := []interface{}{}
 			for i := 0; i < arg.Len(); i++ {
@@ -150,11 +149,11 @@ func Q(ctx context.Context, pool SQLBasic, query string, options *Options, args 
 		}
 	}
 
-	if strings.HasPrefix(query, "INSERT") || strings.HasPrefix(query, "insert") {
+	if queryType == "INSERT" || queryType == "insert" {
 		return pool.ExecContext(ctx, query, args...)
-	} else if strings.HasPrefix(query, "UPDATE") || strings.HasPrefix(query, "update") {
+	} else if queryType == "UPDATE" || queryType == "update" {
 		return pool.ExecContext(ctx, query, args...)
-	} else if strings.HasPrefix(query, "DELETE") || strings.HasPrefix(query, "delete") {
+	} else if queryType == "DELETE" || queryType == "delete" {
 		return pool.ExecContext(ctx, query, args...)
 	} else {
 		wasQuery = true // Assume Query
@@ -168,6 +167,9 @@ func Q(ctx context.Context, pool SQLBasic, query string, options *Options, args 
 		defer rows.Close()
 
 		cols, err := rows.ColumnTypes()
+		if err != nil {
+			return nil, err
+		}
 		totalColumns := len(cols)
 
 		// Load decoder
@@ -476,6 +478,4 @@ func Q(ctx context.Context, pool SQLBasic, query string, options *Options, args 
 
 		return out, nil
 	}
-
-	return nil, nil
 }
