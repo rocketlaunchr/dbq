@@ -87,9 +87,9 @@ type Options struct {
 
 // E is a wrapper around the Q function. It is used for "Exec" queries such as insert, update and delete.
 // It also returns a sql.Result interface instead of an empty interface.
-func E(ctx context.Context, pool ExecContexter, query string, options *Options, args ...interface{}) (stdSql.Result, error) {
+func E(ctx context.Context, db ExecContexter, query string, options *Options, args ...interface{}) (stdSql.Result, error) {
 
-	res, err := Q(ctx, pool, query, options, args...)
+	res, err := Q(ctx, db, query, options, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func E(ctx context.Context, pool ExecContexter, query string, options *Options, 
 //
 // NOTE: sql.ErrNoRows is never returned as an error. Usually, a single item slice is returned, unless the
 // behavior is modified by the SingleResult Option.
-func Q(ctx context.Context, pool SQLBasic, query string, options *Options, args ...interface{}) (out interface{}, rErr error) {
+func Q(ctx context.Context, db interface{}, query string, options *Options, args ...interface{}) (out interface{}, rErr error) {
 
 	var (
 		o        Options
@@ -150,17 +150,17 @@ func Q(ctx context.Context, pool SQLBasic, query string, options *Options, args 
 	}
 
 	if queryType == "INSERT" || queryType == "insert" {
-		return pool.ExecContext(ctx, query, args...)
+		return db.(ExecContexter).ExecContext(ctx, query, args...)
 	} else if queryType == "UPDATE" || queryType == "update" {
-		return pool.ExecContext(ctx, query, args...)
+		return db.(ExecContexter).ExecContext(ctx, query, args...)
 	} else if queryType == "DELETE" || queryType == "delete" {
-		return pool.ExecContext(ctx, query, args...)
+		return db.(ExecContexter).ExecContext(ctx, query, args...)
 	} else {
 		wasQuery = true // Assume Query
 
 		out := []interface{}{}
 
-		rows, err := pool.QueryContext(ctx, query, args...)
+		rows, err := db.(QueryContexter).QueryContext(ctx, query, args...)
 		if err != nil {
 			return nil, err
 		}
@@ -390,11 +390,11 @@ func Q(ctx context.Context, pool SQLBasic, query string, options *Options, args 
 						if val == nil {
 							vals[fieldName] = (*time.Time)(nil)
 						} else {
-							t, _ := time.Parse(time.RFC3339, *val)
+							t, _ := time.Parse("2006-01-02 15:04:05", *val)
 							vals[fieldName] = &t
 						}
 					} else {
-						t, _ := time.Parse(time.RFC3339, *val)
+						t, _ := time.Parse("2006-01-02 15:04:05", *val)
 						vals[fieldName] = t
 					}
 				case "JSON", "JSONB":

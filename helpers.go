@@ -18,6 +18,11 @@ const (
 	PostgreSQL Database = 1
 )
 
+// INSERT will generate a INSERT statement.
+func INSERT(tableName string, fields []string, rows int, dbtype ...Database) string {
+	return fmt.Sprintf("INSERT INTO %s ( %s ) VALUES %s", tableName, strings.Join(fields, ","), Ph(len(fields), rows, dbtype...))
+}
+
 // Ph generates the placeholders for SQL queries.
 // For a bulk insert operation, rows is the number of rows you intend
 // to insert, and fieldsN is the number of fields per row.
