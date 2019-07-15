@@ -209,7 +209,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 
 				colType := cols[colID].DatabaseTypeName()
 				fieldName := cols[colID].Name()
-				nullable, _ := cols[colID].Nullable()
+				nullable, hasNullableInfo := cols[colID].Nullable()
 
 				var val *string
 
@@ -222,13 +222,16 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 				case "NULL":
 					vals[fieldName] = nil
 				case "CHAR", "VARCHAR", "TEXT", "NVARCHAR", "MEDIUMTEXT", "LONGTEXT":
-					if nullable {
+					if nullable || !hasNullableInfo {
 						vals[fieldName] = val
 					} else {
-						vals[fieldName] = *val
+						if hasNullableInfo {
+							// not null
+							vals[fieldName] = *val
+						}
 					}
 				case "FLOAT", "DOUBLE", "DECIMAL", "NUMERIC", "FLOAT4", "FLOAT8":
-					if nullable {
+					if nullable || !hasNullableInfo {
 						if val == nil {
 							vals[fieldName] = (*float64)(nil)
 						} else {
@@ -236,8 +239,11 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							vals[fieldName] = &f
 						}
 					} else {
-						f, _ := strconv.ParseFloat(*val, 64)
-						vals[fieldName] = f
+						if hasNullableInfo {
+							// not null
+							f, _ := strconv.ParseFloat(*val, 64)
+							vals[fieldName] = f
+						}
 					}
 				case "INT", "TINYINT", "INT2", "INT4", "INT8", "MEDIUMINT", "SMALLINT", "BIGINT":
 
@@ -257,118 +263,151 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 
 					switch cols[colID].ScanType().Kind() {
 					case reflect.Uint:
-						if nullable {
+						if nullable || !hasNullableInfo {
 							if val == nil {
 								vals[fieldName] = (*uint)(nil)
 							} else {
 								vals[fieldName] = &[]uint{uint(*u64)}[0]
 							}
 						} else {
-							vals[fieldName] = uint(*u64)
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = uint(*u64)
+							}
 						}
 					case reflect.Uint8:
-						if nullable {
+						if nullable || !hasNullableInfo {
 							if val == nil {
 								vals[fieldName] = (*uint8)(nil)
 							} else {
 								vals[fieldName] = &[]uint8{uint8(*u64)}[0]
 							}
 						} else {
-							vals[fieldName] = uint8(*u64)
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = uint8(*u64)
+							}
 						}
 					case reflect.Uint16:
-						if nullable {
+						if nullable || !hasNullableInfo {
 							if val == nil {
 								vals[fieldName] = (*uint16)(nil)
 							} else {
 								vals[fieldName] = &[]uint16{uint16(*u64)}[0]
 							}
 						} else {
-							vals[fieldName] = uint16(*u64)
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = uint16(*u64)
+							}
 						}
 					case reflect.Uint32:
-						if nullable {
+						if nullable || !hasNullableInfo {
 							if val == nil {
 								vals[fieldName] = (*uint32)(nil)
 							} else {
 								vals[fieldName] = &[]uint32{uint32(*u64)}[0]
 							}
 						} else {
-							vals[fieldName] = uint32(*u64)
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = uint32(*u64)
+							}
 						}
 					case reflect.Uint64:
-						if nullable {
+						if nullable || !hasNullableInfo {
 							if val == nil {
 								vals[fieldName] = (*uint64)(nil)
 							} else {
 								vals[fieldName] = &[]uint64{*u64}[0]
 							}
 						} else {
-							vals[fieldName] = *u64
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = *u64
+							}
 						}
 					case reflect.Int:
-						if nullable {
+						if nullable || !hasNullableInfo {
 							if val == nil {
 								vals[fieldName] = (*int)(nil)
 							} else {
 								vals[fieldName] = &[]int{int(*i64)}[0]
 							}
 						} else {
-							vals[fieldName] = int(*i64)
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = int(*i64)
+							}
 						}
 					case reflect.Int8:
-						if nullable {
+						if nullable || !hasNullableInfo {
 							if val == nil {
 								vals[fieldName] = (*int8)(nil)
 							} else {
 								vals[fieldName] = &[]int8{int8(*i64)}[0]
 							}
 						} else {
-							vals[fieldName] = int8(*i64)
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = int8(*i64)
+							}
 						}
 					case reflect.Int16:
-						if nullable {
+						if nullable || !hasNullableInfo {
 							if val == nil {
 								vals[fieldName] = (*int16)(nil)
 							} else {
 								vals[fieldName] = &[]int16{int16(*i64)}[0]
 							}
 						} else {
-							vals[fieldName] = int16(*i64)
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = int16(*i64)
+							}
 						}
 					case reflect.Int32:
-						if nullable {
+						if nullable || !hasNullableInfo {
 							if val == nil {
 								vals[fieldName] = (*int32)(nil)
 							} else {
 								vals[fieldName] = &[]int32{int32(*i64)}[0]
 							}
 						} else {
-							vals[fieldName] = int32(*i64)
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = int32(*i64)
+							}
 						}
 					case reflect.Int64:
-						if nullable {
+						if nullable || !hasNullableInfo {
 							if val == nil {
 								vals[fieldName] = (*int64)(nil)
 							} else {
 								vals[fieldName] = &[]int64{*i64}[0]
 							}
 						} else {
-							vals[fieldName] = *i64
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = *i64
+							}
 						}
 					default:
-						if nullable {
+						if nullable || !hasNullableInfo {
 							if val == nil {
 								vals[fieldName] = (*int64)(nil)
 							} else {
 								vals[fieldName] = &[]int64{*i64}[0]
 							}
 						} else {
-							vals[fieldName] = *i64
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = *i64
+							}
 						}
 					}
 				case "BOOL":
-					if nullable {
+					if nullable || !hasNullableInfo {
 						if val == nil {
 							vals[fieldName] = (*bool)(nil)
 						} else {
@@ -379,14 +418,17 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							}
 						}
 					} else {
-						if *val == "true" || *val == "TRUE" || *val == "1" {
-							vals[fieldName] = true
-						} else {
-							vals[fieldName] = false
+						if hasNullableInfo {
+							// not null
+							if *val == "true" || *val == "TRUE" || *val == "1" {
+								vals[fieldName] = true
+							} else {
+								vals[fieldName] = false
+							}
 						}
 					}
 				case "DATETIME", "TIMESTAMP", "TIMESTAMPTZ":
-					if nullable {
+					if nullable || !hasNullableInfo {
 						if val == nil {
 							vals[fieldName] = (*time.Time)(nil)
 						} else {
@@ -394,11 +436,14 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							vals[fieldName] = &t
 						}
 					} else {
-						t, _ := time.Parse("2006-01-02 15:04:05", *val)
-						vals[fieldName] = t
+						if hasNullableInfo {
+							// not null
+							t, _ := time.Parse("2006-01-02 15:04:05", *val)
+							vals[fieldName] = t
+						}
 					}
 				case "JSON", "JSONB":
-					if nullable && val == nil {
+					if val == nil {
 						vals[fieldName] = nil
 					} else {
 						var jData interface{}
@@ -406,7 +451,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 						vals[fieldName] = jData
 					}
 				case "DATE":
-					if nullable {
+					if nullable || !hasNullableInfo {
 						if val == nil {
 							vals[fieldName] = (*civil.Date)(nil)
 						} else {
@@ -414,11 +459,14 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							vals[fieldName] = &d
 						}
 					} else {
-						d, _ := civil.ParseDate(*val)
-						vals[fieldName] = d
+						if hasNullableInfo {
+							// not null
+							d, _ := civil.ParseDate(*val)
+							vals[fieldName] = d
+						}
 					}
 				case "TIME":
-					if nullable {
+					if nullable || !hasNullableInfo {
 						if val == nil {
 							vals[fieldName] = (*civil.Time)(nil)
 						} else {
@@ -426,8 +474,11 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							vals[fieldName] = &t
 						}
 					} else {
-						t, _ := civil.ParseTime(*val)
-						vals[fieldName] = t
+						if hasNullableInfo {
+							// not null
+							t, _ := civil.ParseTime(*val)
+							vals[fieldName] = t
+						}
 					}
 
 				// TODO: More data types
@@ -435,12 +486,11 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 				// https://github.com/lib/pq/blob/master/oid/types.go
 				default:
 					// Assume string
-					if nullable {
+					if nullable || !hasNullableInfo {
 						vals[fieldName] = val
 					} else {
-						if val == nil {
-							vals[fieldName] = (*string)(nil)
-						} else {
+						if hasNullableInfo {
+							// not null
 							vals[fieldName] = *val
 						}
 					}

@@ -19,14 +19,14 @@ const (
 )
 
 // INSERT will generate a INSERT statement.
-func INSERT(tableName string, fields []string, rows int, dbtype ...Database) string {
-	return fmt.Sprintf("INSERT INTO %s ( %s ) VALUES %s", tableName, strings.Join(fields, ","), Ph(len(fields), rows, dbtype...))
+func INSERT(tableName string, columns []string, rows int, dbtype ...Database) string {
+	return fmt.Sprintf("INSERT INTO %s ( %s ) VALUES %s", tableName, strings.Join(columns, ","), Ph(len(columns), rows, dbtype...))
 }
 
 // Ph generates the placeholders for SQL queries.
 // For a bulk insert operation, rows is the number of rows you intend
-// to insert, and fieldsN is the number of fields per row.
-func Ph(fieldsN, rows int, dbtype ...Database) string {
+// to insert, and columnsN is the number of fields per row.
+func Ph(columnsN, rows int, dbtype ...Database) string {
 
 	var typ Database
 	if len(dbtype) > 0 {
@@ -34,7 +34,7 @@ func Ph(fieldsN, rows int, dbtype ...Database) string {
 	}
 
 	if typ == MySQL {
-		inner := "( " + strings.TrimSuffix(strings.Repeat("?,", fieldsN), ",") + " ),"
+		inner := "( " + strings.TrimSuffix(strings.Repeat("?,", columnsN), ",") + " ),"
 		return strings.TrimSuffix(strings.Repeat(inner, rows), ",")
 	}
 
@@ -43,7 +43,7 @@ func Ph(fieldsN, rows int, dbtype ...Database) string {
 	varCount := 1
 	for i := 1; i <= rows; i++ {
 		singleValuesStr = singleValuesStr + "("
-		for j := 1; j <= fieldsN; j++ {
+		for j := 1; j <= columnsN; j++ {
 			singleValuesStr = singleValuesStr + fmt.Sprintf("$%d,", varCount)
 			varCount++
 		}
