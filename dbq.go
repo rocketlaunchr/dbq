@@ -432,14 +432,20 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 						if val == nil {
 							vals[fieldName] = (*time.Time)(nil)
 						} else {
-							t, _ := time.Parse("2006-01-02 15:04:05", *val)
+							t, err := time.Parse("2006-01-02 15:04:05", *val) // MySQL
+							if err != nil {
+								t, _ = time.Parse(time.RFC3339, *val) // PostgreSQL
+							}
 							vals[fieldName] = &t
 						}
 					} else {
 						if hasNullableInfo {
 							// not null
-							t, _ := time.Parse("2006-01-02 15:04:05", *val)
-							vals[fieldName] = t
+							t, err := time.Parse("2006-01-02 15:04:05", *val) // MySQL
+							if err != nil {
+								t, _ = time.Parse(time.RFC3339, *val) // PostgreSQL
+							}
+							vals[fieldName] = &t
 						}
 					}
 				case "JSON", "JSONB":
@@ -455,13 +461,21 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 						if val == nil {
 							vals[fieldName] = (*civil.Date)(nil)
 						} else {
-							d, _ := civil.ParseDate(*val)
+							d, err := civil.ParseDate(*val) // MySQL
+							if err != nil {
+								t, _ := time.Parse(time.RFC3339, *val) // PostgreSQL
+								d = civil.Date{Year: t.Year(), Month: t.Month(), Day: t.Day()}
+							}
 							vals[fieldName] = &d
 						}
 					} else {
 						if hasNullableInfo {
 							// not null
-							d, _ := civil.ParseDate(*val)
+							d, err := civil.ParseDate(*val) // MySQL
+							if err != nil {
+								t, _ := time.Parse(time.RFC3339, *val) // PostgreSQL
+								d = civil.Date{Year: t.Year(), Month: t.Month(), Day: t.Day()}
+							}
 							vals[fieldName] = d
 						}
 					}
