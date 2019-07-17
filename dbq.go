@@ -53,10 +53,6 @@ type StructorConfig struct {
 // a single result from a query.
 var SingleResult = &Options{SingleResult: true}
 
-// Panic is a convenient option for the common case of panicking
-// upon encountering an error.
-var Panic = &Options{Panic: true}
-
 // Options is used to modify the default behavior.
 type Options struct {
 
@@ -79,10 +75,16 @@ type Options struct {
 	// single result directly (instead of wrapped in a slice). This makes it easier to
 	// type assert.
 	SingleResult bool
+}
 
-	// Panic is used to generate a panic instead of return an error.
-	// This can erradicate boiler-plate error handing code.
-	Panic bool
+// MustE is a wrapper around the E function. It will panic upon encountering an error.
+// This can erradicate boiler-plate error handing code.
+func MustE(ctx context.Context, db ExecContexter, query string, options *Options, args ...interface{}) stdSql.Result {
+	resp, err := E(ctx, db, query, options, args...)
+	if err != nil {
+		panic(err)
+	}
+	return resp
 }
 
 // E is a wrapper around the Q function. It is used for "Exec" queries such as insert, update and delete.
@@ -95,6 +97,16 @@ func E(ctx context.Context, db ExecContexter, query string, options *Options, ar
 	}
 
 	return res.(stdSql.Result), nil
+}
+
+// MustQ is a wrapper around the Q function. It will panic upon encountering an error.
+// This can erradicate boiler-plate error handing code.
+func MustQ(ctx context.Context, db ExecContexter, query string, options *Options, args ...interface{}) interface{} {
+	resp, err := Q(ctx, db, query, options, args...)
+	if err != nil {
+		panic(err)
+	}
+	return resp
 }
 
 // Q is a convenience function that is used for inserting, updating, deleting, and querying a SQL database.
@@ -128,10 +140,6 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 					out = row.Interface()
 				}
 			}
-		} else {
-			if o.Panic {
-				panic(rErr)
-			}
 		}
 	}()
 
@@ -141,11 +149,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 	if len(args) == 1 {
 		// Convert slice to []interface{}
 		if arg := reflect.ValueOf(args[0]); arg.Kind() == reflect.Slice {
-			newArgs := []interface{}{}
-			for i := 0; i < arg.Len(); i++ {
-				newArgs = append(newArgs, arg.Index(i).Interface())
-			}
-			args = newArgs
+			args = sliceConv(arg)
 		}
 	}
 

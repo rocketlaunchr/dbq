@@ -4,6 +4,7 @@ package dbq
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -51,4 +52,18 @@ func Ph(columnsN, rows int, dbtype ...Database) string {
 	}
 
 	return strings.TrimSuffix(singleValuesStr, ",")
+}
+
+func sliceConv(arg reflect.Value) []interface{} {
+	out := []interface{}{}
+
+	if arg.Kind() == reflect.Slice {
+		for i := 0; i < arg.Len(); i++ {
+			out = append(out, sliceConv(reflect.ValueOf(arg.Index(i).Interface()))...)
+		}
+	} else {
+		out = append(out, arg.Interface())
+	}
+
+	return out
 }
