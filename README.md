@@ -1,11 +1,13 @@
 dbq - Barbeque the boiler plate code [![GoDoc](http://godoc.org/github.com/rocketlaunchr/dbq?status.svg)](http://godoc.org/github.com/rocketlaunchr/dbq) [![cover.run](https://cover.run/go/github.com/rocketlaunchr/dbq.svg?style=flat&tag=golang-1.12)](https://cover.run/go?tag=golang-1.12&repo=github.com%2Frocketlaunchr%2Fdbq) [![Go Report Card](https://goreportcard.com/badge/github.com/rocketlaunchr/dbq)](https://goreportcard.com/report/github.com/rocketlaunchr/dbq)
 ===============
 
-![dbq](https://github.com/rocketlaunchr/dbq/raw/master/logo.png)
+<p align="center">
+<img src="https://github.com/rocketlaunchr/dbq/raw/master/logo.png" alt="dbq" />
+</p>
 
 (Now compatible with MySQL and PostgreSQL!)
 
-Everyone knows that performing simple **DATABASE queries** in Go takes numerous lines of code that is often repetitive. If you want to avoid the clutter, you have two options: A heavy-duty ORM that is not up to the standard of Laraval or Django. Or DBQ!
+Everyone knows that performing simple **DATABASE queries** in Go takes numerous lines of code that is often repetitive. If you want to avoid the cruft, you have two options: A heavy-duty ORM that is not up to the standard of Laraval or Django. Or DBQ!
 
 
 **WARNING: You will seriously reduce your database code to a few lines**
