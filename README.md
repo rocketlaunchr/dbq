@@ -82,7 +82,7 @@ type user struct {
 
 opts := &dbq.Options{ConcreteStruct: user{}, DecoderConfig:x}
 
-results := dbq.MustQ(ctx, db, "SELECT * FROM users", opts)
+results, err := dbq.Q(ctx, db, "SELECT * FROM users", opts)
 
 ```
 
@@ -129,21 +129,24 @@ Results:
 }
 ```
 
-### Defer go
+### Query Single Row
 
-This feature makes Go's language syntax more internally consistent. There is no reason why `defer` and `go` should not work together.
+If you know that the query will return at max 1 row:
 
 ```go
 
-mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
-	start := time.Now()
-	// Transmit how long the request took to serve without delaying response to client.
-	defer go transmitRequestStats(start)
-
-	fmt.Fprintf(w, "Welcome to the home page!")
-})
+db, _ := sql.Open("mysql", "user:password@tcp(localhost:3306)/db")
+result := dbq.MustQ(ctx, db, "SELECT * FROM users LIMIT 1", dbq.SingleResult)
+if result == nil {
+	// no result
+} else {
+	result.(map[string]interface{})
+}
 
 ```
+
+
+
 
 
 #
