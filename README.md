@@ -15,9 +15,9 @@ Everyone knows that performing simple **DATABASE queries** in Go takes numerous 
 * **MySQL** and **PostgreSQL** compatible
 * **Convenient** and **Developer Friendly**
 * Bulk Insert seamlessly
-* Unmarshal query results directly to struct using [mapstructure](https://github.com/mitchellh/mapstructure) package
-* Super lightweight
-* Compatible with [mysql-go](https://github.com/rocketlaunchr/mysql-go) for proper MySQL cancelation
+* Automatically Unmarshal query results directly to struct using [mapstructure](https://github.com/mitchellh/mapstructure) package
+* Lightweight
+* Compatible with [mysql-go](https://github.com/rocketlaunchr/mysql-go) for proper MySQL query cancelation
 
 ## Dependencies
 
@@ -50,37 +50,84 @@ You can insert multiple rows at once.
 
 ```go
 
-	db, _ := sql.Open("mysql", "user:password@tcp(localhost:3306)/db")
+db, _ := sql.Open("mysql", "user:password@tcp(localhost:3306)/db")
 
-	users := []interface{}{
-		[]interface{}{"Brad", 45, time.Now()},
-		[]interface{}{"Ange", 36, time.Now()},
-		[]interface{}{"Emily", 22, time.Now()},
-	}
+users := []interface{}{
+	[]interface{}{"Brad", 45, time.Now()},
+	[]interface{}{"Ange", 36, time.Now()},
+	[]interface{}{"Emily", 22, time.Now()},
+}
 
-	stmt := dbq.INSERT("users", []string{"name", "age", "created_at"}, len(users))
+stmt := dbq.INSERT("users", []string{"name", "age", "created_at"}, len(users))
 
-	dbq.E(ctx, db, stmt, nil, users)
+dbq.E(ctx, db, stmt, nil, users)
 
 ```
 
-### Fordefer
+### Query
 
-See [Blog post](https://blog.learngoprogramming.com/gotchas-of-defer-in-go-1-8d070894cb01) on why this is an improvement. It can be especially helpful in unit tests.
+`dqb.Q` ordinarily returns `[]map[string]interface{}` results but you can automatically
+unmarshal to a struct. You will need to type assert the results.
 
 ```go
 
-for {
-	row, err := db.Query("SELECT ...")
-	if err != nil {
-		panic(err)
-	}
+db, _ := sql.Open("mysql", "user:password@tcp(localhost:3306)/db")
 
-	fordefer row.Close()
+type user struct {
+	ID        int       `dbq:"id"`
+	Name      string    `dbq:"name"`
+	Age       int       `dbq:"age"`
+	CreatedAt time.Time `dbq:"created_at"`
 }
+
+opts := &dbq.Options{ConcreteStruct: user{}, DecoderConfig:x}
+
+results := dbq.MustQ(ctx, db, "SELECT * FROM users", opts)
 
 ```
 
+Results:
+
+```groovy
+([]interface {}) (len=6 cap=8) {
+ (*main.user)(0xc00009e1c0)({
+  ID: (int) 1,
+  Name: (string) (len=5) "Sally",
+  Age: (int) 12,
+  CreatedAt: (time.Time) 2019-03-01 00:00:00 +0000 UTC
+ }),
+ (*main.user)(0xc00009e300)({
+  ID: (int) 2,
+  Name: (string) (len=5) "Peter",
+  Age: (int) 15,
+  CreatedAt: (time.Time) 2019-02-01 00:00:00 +0000 UTC
+ }),
+ (*main.user)(0xc00009e440)({
+  ID: (int) 3,
+  Name: (string) (len=3) "Tom",
+  Age: (int) 18,
+  CreatedAt: (time.Time) 2019-01-01 00:00:00 +0000 UTC
+ }),
+ (*main.user)(0xc00009e5c0)({
+  ID: (int) 4,
+  Name: (string) (len=4) "Brad",
+  Age: (int) 45,
+  CreatedAt: (time.Time) 2019-07-24 14:36:58 +0000 UTC
+ }),
+ (*main.user)(0xc00009e700)({
+  ID: (int) 5,
+  Name: (string) (len=4) "Ange",
+  Age: (int) 36,
+  CreatedAt: (time.Time) 2019-07-24 14:36:58 +0000 UTC
+ }),
+ (*main.user)(0xc00009e840)({
+  ID: (int) 6,
+  Name: (string) (len=5) "Emily",
+  Age: (int) 22,
+  CreatedAt: (time.Time) 2019-07-24 14:36:58 +0000 UTC
+ })
+}
+```
 
 ### Defer go
 
