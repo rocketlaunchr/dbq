@@ -145,7 +145,30 @@ if result == nil {
 
 ```
 
+### MySQL cancelation
 
+In order to properly cancel a MySQL query, you need to use the [mysql-go](https://github.com/rocketlaunchr/mysql-go) package. `dbq` plays nicely with it.
+
+```go
+import (
+   stdSql "database/sql"
+   sql "github.com/rocketlaunchr/mysql-go"
+)
+
+p, _ := stdSql.Open("mysql", "user:password@tcp(localhost:3306)/db")
+kP, _ := stdSql.Open("mysql", "user:password@tcp(localhost:3306)/db")
+kP.SetMaxOpenConns(1)
+
+pool := &sql.DB{p, kP}
+
+
+result := dbq.MustQ(ctx, pool, "SELECT * FROM users LIMIT 1", dbq.SingleResult)
+if result == nil {
+	// no result
+} else {
+	result.(map[string]interface{})
+}
+```
 
 
 
