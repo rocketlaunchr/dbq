@@ -15,7 +15,7 @@ Everyone knows that performing simple **DATABASE queries** in Go takes numerous 
 * **MySQL** and **PostgreSQL** compatible
 * **Convenient** and **Developer Friendly**
 * Bulk Insert seamlessly
-* Automatically Unmarshal query results directly to struct using [mapstructure](https://github.com/mitchellh/mapstructure) package
+* Automatically unmarshal query results directly to a struct using [mapstructure](https://github.com/mitchellh/mapstructure) package
 * Lightweight
 * Compatible with [mysql-go](https://github.com/rocketlaunchr/mysql-go) for proper MySQL query cancelation
 
@@ -66,7 +66,7 @@ dbq.E(ctx, db, stmt, nil, users)
 
 ### Query
 
-`dqb.Q` ordinarily returns `[]map[string]interface{}` results but you can automatically
+`dqb.Q` ordinarily returns `[]map[string]interface{}` results, but you can automatically
 unmarshal to a struct. You will need to type assert the results.
 
 ```go
@@ -131,7 +131,7 @@ Results:
 
 ### Query Single Row
 
-If you know that the query will return at max 1 row:
+If you know that the query will return at maximum 1 row:
 
 ```go
 
@@ -147,7 +147,7 @@ if result == nil {
 
 ### MySQL cancelation
 
-In order to properly cancel a MySQL query, you need to use the [mysql-go](https://github.com/rocketlaunchr/mysql-go) package. `dbq` plays nicely with it.
+To properly cancel a MySQL query, you need to use the [mysql-go](https://github.com/rocketlaunchr/mysql-go) package. `dbq` plays nicely with it.
 
 ```go
 import (
