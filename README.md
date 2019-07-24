@@ -1,7 +1,7 @@
 dbq - Barbeque the boiler plate code [![GoDoc](http://godoc.org/github.com/rocketlaunchr/dbq?status.svg)](http://godoc.org/github.com/rocketlaunchr/dbq) [![cover.run](https://cover.run/go/github.com/rocketlaunchr/dbq.svg?style=flat&tag=golang-1.12)](https://cover.run/go?tag=golang-1.12&repo=github.com%2Frocketlaunchr%2Fdbq) [![Go Report Card](https://goreportcard.com/badge/github.com/rocketlaunchr/dbq)](https://goreportcard.com/report/github.com/rocketlaunchr/dbq)
 ===============
 
-![Fire](https://github.com/rocketlaunchr/dbq/raw/master/logo.svg)
+![dbq](https://github.com/rocketlaunchr/dbq/raw/master/logo.png)
 
 (Now compatible with MySQL and PostgreSQL!)
 
