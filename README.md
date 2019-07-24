@@ -1,7 +1,12 @@
 dbq - Barbeque the boiler plate code [![GoDoc](http://godoc.org/github.com/rocketlaunchr/dbq?status.svg)](http://godoc.org/github.com/rocketlaunchr/dbq) [![cover.run](https://cover.run/go/github.com/rocketlaunchr/dbq.svg?style=flat&tag=golang-1.12)](https://cover.run/go?tag=golang-1.12&repo=github.com%2Frocketlaunchr%2Fdbq) [![Go Report Card](https://goreportcard.com/badge/github.com/rocketlaunchr/dbq)](https://goreportcard.com/report/github.com/rocketlaunchr/dbq)
+
+(Now compatible with MySQL and PostgreSQL!)
 ===============
 
-Everyone knows that performing simple queries in Go takes numerous lines of code that is often repetitive. If you want to avoid the clutter, you have two options: A heavy-duty ORM that is not up to the standard of Laraval or Django. Or DBQ!
+Everyone knows that performing simple **DATABASE queries** in Go takes numerous lines of code that is often repetitive. If you want to avoid the clutter, you have two options: A heavy-duty ORM that is not up to the standard of Laraval or Django. Or DBQ!
+
+
+**WARNING: You will seriously reduce your database code to a few lines**
 
 
 ## What is included
@@ -29,36 +34,33 @@ go get -u github.com/rocketlaunchr/dbq
 
 ## Examples
 
-### Address Operator
+Let's assume a table called `users`:
 
-The Address Operator allows you to use more visually pleasing syntax. There is no need for a temporary variable. It can be used with `string`, `bool`, `int`, `float64` and function calls where the function returns 1 return value.
+| id | name  | age | created_at |
+|----|-------|-----|------------|
+| 1  | Sally | 12  | 2019-03-01 |
+| 2  | Peter | 15  | 2019-02-01 |
+| 3  | Tom   | 18  | 2019-01-01 |
+
+
+### Bulk Insert
+
+You can insert multiple rows at once.
 
 
 ```go
 
-func main() {
+	db, _ := sql.Open("mysql", "user:password@tcp(localhost:3306)/db")
 
-	message := &"igo is so convenient"
-	display(message)
-   
-	display(&`inline string`)
-
-	display(&defaultMessage())
-
-}
-
-func display(m *string) {
-	if m == nil {
-		fmt.Print("no message")
-	} else {
-		fmt.Print(*m)
+	users := []interface{}{
+		[]interface{}{"Brad", 45, time.Now()},
+		[]interface{}{"Ange", 36, time.Now()},
+		[]interface{}{"Emily", 22, time.Now()},
 	}
 
-}
+	stmt := dbq.INSERT("users", []string{"name", "age", "created_at"}, len(users))
 
-func defaultMessage() string {
-	return "default message"
-}
+	dbq.E(ctx, db, stmt, nil, users)
 
 ```
 
