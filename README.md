@@ -136,8 +136,6 @@ Results:
 If you know that the query will return at maximum 1 row:
 
 ```go
-
-db, _ := sql.Open("mysql", "user:password@tcp(localhost:3306)/db")
 result := dbq.MustQ(ctx, db, "SELECT * FROM users LIMIT 1", dbq.SingleResult)
 if result == nil {
 	// no result
