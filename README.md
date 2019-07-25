@@ -75,8 +75,6 @@ unmarshal to a struct. You will need to type assert the results.
 
 ```go
 
-db, _ := sql.Open("mysql", "user:password@tcp(localhost:3306)/db")
-
 type user struct {
 	ID        int       `dbq:"id"`
 	Name      string    `dbq:"name"`
@@ -165,8 +163,10 @@ kP.SetMaxOpenConns(1)
 
 pool := &sql.DB{p, kP}
 
+conn, err := pool.Conn(ctx)
+defer conn.Close()
 
-result := dbq.MustQ(ctx, pool, "SELECT * FROM users LIMIT 1", dbq.SingleResult)
+result := dbq.MustQ(ctx, conn, "SELECT * FROM users LIMIT 1", dbq.SingleResult)
 if result == nil {
 	// no result
 } else {
@@ -174,7 +174,12 @@ if result == nil {
 }
 ```
 
-
+## Other useful packages
+[remember-go](https://github.com/rocketlaunchr/remember-go) - Cache slow database queries
+[mysql-go](https://github.com/rocketlaunchr/mysql-go) - Properly cancel slow MySQL queries
+[react](https://github.com/rocketlaunchr/react) - Build front end applications using Go
+[igo](https://github.com/rocketlaunchr/igo) - A Go transpiler with cool new syntax such as fordefer (defer for for-loops)
+[dataframe-go](https://github.com/rocketlaunchr/dataframe-go) - Statistics and data manipulation.
 
 #
 
