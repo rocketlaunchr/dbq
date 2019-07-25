@@ -70,7 +70,7 @@ dbq.E(ctx, db, stmt, nil, users)
 
 ### Query
 
-`dqb.Q` ordinarily returns `[]map[string]interface{}` results, but you can automatically
+`dbq.Q` ordinarily returns `[]map[string]interface{}` results, but you can automatically
 unmarshal to a struct. You will need to type assert the results.
 
 ```go
