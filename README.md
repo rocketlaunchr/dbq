@@ -175,11 +175,11 @@ if result == nil {
 ```
 
 ## Other useful packages
-[remember-go](https://github.com/rocketlaunchr/remember-go) - Cache slow database queries
-[mysql-go](https://github.com/rocketlaunchr/mysql-go) - Properly cancel slow MySQL queries
-[react](https://github.com/rocketlaunchr/react) - Build front end applications using Go
-[igo](https://github.com/rocketlaunchr/igo) - A Go transpiler with cool new syntax such as fordefer (defer for for-loops)
-[dataframe-go](https://github.com/rocketlaunchr/dataframe-go) - Statistics and data manipulation.
+* [remember-go](https://github.com/rocketlaunchr/remember-go) - Cache slow database queries
+* [mysql-go](https://github.com/rocketlaunchr/mysql-go) - Properly cancel slow MySQL queries
+* [react](https://github.com/rocketlaunchr/react) - Build front end applications using Go
+* [igo](https://github.com/rocketlaunchr/igo) - A Go transpiler with cool new syntax such as fordefer (defer for for-loops)
+* [dataframe-go](https://github.com/rocketlaunchr/dataframe-go) - Statistics and data manipulation.
 
 #
 
