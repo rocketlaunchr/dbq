@@ -512,7 +512,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 						WeaklyTypedInput: o.DecoderConfig.WeaklyTypedInput,
 						Result:           res,
 					}
-					decoder, err = mapstructure.NewDecoder(dc)
+					decoder, err := mapstructure.NewDecoder(dc)
 					if err != nil {
 						return nil, err
 					}
