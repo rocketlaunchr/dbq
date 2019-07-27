@@ -178,26 +178,6 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 			return nil, err
 		}
 		totalColumns := len(cols)
-
-		var decoder *mapstructure.Decoder
-		if o.ConcreteStruct != nil {
-			res := reflect.New(reflect.TypeOf(o.ConcreteStruct)).Interface()
-			if o.DecoderConfig != nil {
-
-				dc := &mapstructure.DecoderConfig{
-					DecodeHook:       o.DecoderConfig.DecodeHook,
-					ZeroFields:       true,
-					TagName:          "dbq",
-					WeaklyTypedInput: o.DecoderConfig.WeaklyTypedInput,
-					Result:           res,
-				}
-
-				decoder, err = mapstructure.NewDecoder(dc)
-				if err != nil {
-					panic(err)
-				}
-			}
-		}
 		XVlBzgbaiCMRAjW := fordefer.NewStack(true)
 		defer XVlBzgbaiCMRAjW.Unwind()
 
@@ -525,12 +505,23 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 			if o.ConcreteStruct != nil {
 				res := reflect.New(reflect.TypeOf(o.ConcreteStruct)).Interface()
 				if o.DecoderConfig != nil {
+					dc := &mapstructure.DecoderConfig{
+						DecodeHook:       o.DecoderConfig.DecodeHook,
+						ZeroFields:       true,
+						TagName:          "dbq",
+						WeaklyTypedInput: o.DecoderConfig.WeaklyTypedInput,
+						Result:           res,
+					}
+					decoder, err = mapstructure.NewDecoder(dc)
+					if err != nil {
+						return nil, err
+					}
 					err = decoder.Decode(vals)
 					if err != nil {
 						return nil, err
 					}
 				} else {
-					err := mapstructure.Decode(vals, &res)
+					err := mapstructure.Decode(vals, res)
 					if err != nil {
 						return nil, err
 					}
