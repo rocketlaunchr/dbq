@@ -5,6 +5,7 @@ package dbq
 import (
 	"context"
 	"database/sql/driver"
+	"fmt"
 	"testing"
 	"time"
 
@@ -73,9 +74,11 @@ func TestMustQ(t *testing.T) {
 	row := sqlmock.NewRows([]string{"id", "product", "price", "quantity", "available", "date_added"}).
 		AddRow(int64(1), "wrist watch", float64(45000.98), int64(6), int64(1), tRef)
 
-	mock.ExpectQuery("^SELECT (.+) FROM store$").WillReturnRows(rows)
+	mock.ExpectQuery("^SELECT (.+) FROM store$").WillReturnRows(rows) // Multiple result select query
 
-	mock.ExpectQuery("^SELECT (.+) FROM store LIMIT 1$").WillReturnRows(row)
+	mock.ExpectQuery("^SELECT (.+) FROM store.*$").WillReturnRows(sqlmock.NewRows(nil)) // zero result
+
+	mock.ExpectQuery("^SELECT (.+) FROM store LIMIT 1$").WillReturnRows(row) // single result
 
 	ctx := context.Background()
 
@@ -86,6 +89,13 @@ func TestMustQ(t *testing.T) {
 
 	if !cmp.Equal(expected, actual) {
 		t.Errorf("wrong val: expected: %T %v actual: %T %v", expected, expected, actual, actual)
+	}
+
+	// Test zero data select query with MustQ
+
+	_, err = Q(ctx, db, "SELECT * FROM store WHERE id = 20", opts)
+	if err != nil {
+		t.Errorf("There was an error while executing statement: %s", err)
 	}
 
 	// Testing Single Data Select
@@ -126,6 +136,9 @@ func TestMustE(t *testing.T) {
 
 	tRef := "2006-01-02 15:04:05"
 
+	mock.ExpectQuery("^SELECT (.+) FROM store$").
+		WillReturnError(fmt.Errorf("There was error while executing statement"))
+
 	mock.ExpectExec("INSERT INTO store").
 		WithArgs(4, "mobile phone", 456787.45, 8, 1, tRef).
 		WillReturnResult(sqlmock.NewResult(1, 1))
@@ -156,6 +169,14 @@ func TestMustE(t *testing.T) {
 
 	ctx := context.Background()
 
+	// Error testing on Select Query
+	opts := &Options{ConcreteStruct: store{}, DecoderConfig: &StructorConfig{WeaklyTypedInput: true}}
+
+	_, err = E(ctx, db, "SELECT * FROM store", opts)
+	if err == nil {
+		t.Errorf("was expecting an error, but there was none.")
+	}
+
 	// Testing Single Insert
 	insertArgs := []interface{}{4, "mobile phone", 456787.45, 8, 1, tRef}
 
@@ -179,7 +200,7 @@ func TestMustE(t *testing.T) {
 
 	_ = MustE(ctx, db, stmt2, nil, storeProducts)
 
-	// Testing Data update with MustQ
+	// Testing Data update with MustE
 
 	updateArgs := []interface{}{"buckets", 2}
 	_ = MustE(ctx, db, "UPDATE store SET product = ? WHERE id = ?", nil, updateArgs)
