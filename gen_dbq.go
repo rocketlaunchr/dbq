@@ -78,6 +78,10 @@ type Options struct {
 	// single result directly (instead of wrapped in a slice). This makes it easier to
 	// type assert.
 	SingleResult bool
+
+	// Raw can be set to true to bypass all Database specific operations and handle a data
+	// directly without any database specifici processing
+	Raw bool
 }
 
 // MustE is a wrapper around the E function. It will panic upon encountering an error.
@@ -198,308 +202,316 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 			vals := map[string]interface{}{}
 			DaFpLSjFbcXoEFf := fordefer.NewStack(true)
 			defer DaFpLSjFbcXoEFf.Unwind()
-			for colID, elem := range rowData {
-
-				colType := cols[colID].DatabaseTypeName()
-				fieldName := cols[colID].Name()
-				nullable, hasNullableInfo := cols[colID].Nullable()
-
-				var val *string
-
-				raw := elem.(*[]byte)
-				if !(raw == nil || *raw == nil) {
-					val = &[]string{string(*raw)}[0]
-				}
-
-				switch colType {
-				case "NULL":
-					vals[fieldName] = nil
-				case "CHAR", "VARCHAR", "TEXT", "NVARCHAR", "MEDIUMTEXT", "LONGTEXT":
-					if nullable || !hasNullableInfo {
-						vals[fieldName] = val
-					} else {
-						if hasNullableInfo {
-
-							vals[fieldName] = *val
-						}
-					}
-				case "FLOAT", "DOUBLE", "DECIMAL", "NUMERIC", "FLOAT4", "FLOAT8":
-					if nullable || !hasNullableInfo {
-						if val == nil {
-							vals[fieldName] = (*float64)(nil)
-						} else {
-							f, _ := strconv.ParseFloat(*val, 64)
-							vals[fieldName] = &f
-						}
-					} else {
-						if hasNullableInfo {
-
-							f, _ := strconv.ParseFloat(*val, 64)
-							vals[fieldName] = f
-						}
-					}
-				case "INT", "TINYINT", "INT2", "INT4", "INT8", "MEDIUMINT", "SMALLINT", "BIGINT":
-
-					var (
-						i64 *int64
-						u64 *uint64
-					)
-
-					if val != nil {
-						if n, err := strconv.ParseInt(*val, 10, 64); err == nil {
-							i64 = &n
-						}
-						if u, err := strconv.ParseUint(*val, 10, 64); err == nil {
-							u64 = &u
-						}
-					}
-
-					switch cols[colID].ScanType().Kind() {
-					case reflect.Uint:
-						if nullable || !hasNullableInfo {
-							if val == nil {
-								vals[fieldName] = (*uint)(nil)
-							} else {
-								vals[fieldName] = &[]uint{uint(*u64)}[0]
-							}
-						} else {
-							if hasNullableInfo {
-
-								vals[fieldName] = uint(*u64)
-							}
-						}
-					case reflect.Uint8:
-						if nullable || !hasNullableInfo {
-							if val == nil {
-								vals[fieldName] = (*uint8)(nil)
-							} else {
-								vals[fieldName] = &[]uint8{uint8(*u64)}[0]
-							}
-						} else {
-							if hasNullableInfo {
-
-								vals[fieldName] = uint8(*u64)
-							}
-						}
-					case reflect.Uint16:
-						if nullable || !hasNullableInfo {
-							if val == nil {
-								vals[fieldName] = (*uint16)(nil)
-							} else {
-								vals[fieldName] = &[]uint16{uint16(*u64)}[0]
-							}
-						} else {
-							if hasNullableInfo {
-
-								vals[fieldName] = uint16(*u64)
-							}
-						}
-					case reflect.Uint32:
-						if nullable || !hasNullableInfo {
-							if val == nil {
-								vals[fieldName] = (*uint32)(nil)
-							} else {
-								vals[fieldName] = &[]uint32{uint32(*u64)}[0]
-							}
-						} else {
-							if hasNullableInfo {
-
-								vals[fieldName] = uint32(*u64)
-							}
-						}
-					case reflect.Uint64:
-						if nullable || !hasNullableInfo {
-							if val == nil {
-								vals[fieldName] = (*uint64)(nil)
-							} else {
-								vals[fieldName] = &[]uint64{*u64}[0]
-							}
-						} else {
-							if hasNullableInfo {
-
-								vals[fieldName] = *u64
-							}
-						}
-					case reflect.Int:
-						if nullable || !hasNullableInfo {
-							if val == nil {
-								vals[fieldName] = (*int)(nil)
-							} else {
-								vals[fieldName] = &[]int{int(*i64)}[0]
-							}
-						} else {
-							if hasNullableInfo {
-
-								vals[fieldName] = int(*i64)
-							}
-						}
-					case reflect.Int8:
-						if nullable || !hasNullableInfo {
-							if val == nil {
-								vals[fieldName] = (*int8)(nil)
-							} else {
-								vals[fieldName] = &[]int8{int8(*i64)}[0]
-							}
-						} else {
-							if hasNullableInfo {
-
-								vals[fieldName] = int8(*i64)
-							}
-						}
-					case reflect.Int16:
-						if nullable || !hasNullableInfo {
-							if val == nil {
-								vals[fieldName] = (*int16)(nil)
-							} else {
-								vals[fieldName] = &[]int16{int16(*i64)}[0]
-							}
-						} else {
-							if hasNullableInfo {
-
-								vals[fieldName] = int16(*i64)
-							}
-						}
-					case reflect.Int32:
-						if nullable || !hasNullableInfo {
-							if val == nil {
-								vals[fieldName] = (*int32)(nil)
-							} else {
-								vals[fieldName] = &[]int32{int32(*i64)}[0]
-							}
-						} else {
-							if hasNullableInfo {
-
-								vals[fieldName] = int32(*i64)
-							}
-						}
-					case reflect.Int64:
-						if nullable || !hasNullableInfo {
-							if val == nil {
-								vals[fieldName] = (*int64)(nil)
-							} else {
-								vals[fieldName] = &[]int64{*i64}[0]
-							}
-						} else {
-							if hasNullableInfo {
-
-								vals[fieldName] = *i64
-							}
-						}
-					default:
-						if nullable || !hasNullableInfo {
-							if val == nil {
-								vals[fieldName] = (*int64)(nil)
-							} else {
-								vals[fieldName] = &[]int64{*i64}[0]
-							}
-						} else {
-							if hasNullableInfo {
-
-								vals[fieldName] = *i64
-							}
-						}
-					}
-				case "BOOL":
-					if nullable || !hasNullableInfo {
-						if val == nil {
-							vals[fieldName] = (*bool)(nil)
-						} else {
-							if *val == "true" || *val == "TRUE" || *val == "1" {
-								vals[fieldName] = &[]bool{true}[0]
-							} else {
-								vals[fieldName] = &[]bool{false}[0]
-							}
-						}
-					} else {
-						if hasNullableInfo {
-
-							if *val == "true" || *val == "TRUE" || *val == "1" {
-								vals[fieldName] = true
-							} else {
-								vals[fieldName] = false
-							}
-						}
-					}
-				case "DATETIME", "TIMESTAMP", "TIMESTAMPTZ":
-					if nullable || !hasNullableInfo {
-						if val == nil {
-							vals[fieldName] = (*time.Time)(nil)
-						} else {
-							t, err := time.Parse("2006-01-02 15:04:05", *val)
-							if err != nil {
-								t, _ = time.Parse(time.RFC3339, *val)
-							}
-							vals[fieldName] = &t
-						}
-					} else {
-						if hasNullableInfo {
-
-							t, err := time.Parse("2006-01-02 15:04:05", *val)
-							if err != nil {
-								t, _ = time.Parse(time.RFC3339, *val)
-							}
-							vals[fieldName] = &t
-						}
-					}
-				case "JSON", "JSONB":
-					if val == nil {
-						vals[fieldName] = nil
-					} else {
-						var jData interface{}
-						json.Unmarshal(*raw, &jData)
-						vals[fieldName] = jData
-					}
-				case "DATE":
-					if nullable || !hasNullableInfo {
-						if val == nil {
-							vals[fieldName] = (*civil.Date)(nil)
-						} else {
-							d, err := civil.ParseDate(*val)
-							if err != nil {
-								t, _ := time.Parse(time.RFC3339, *val)
-								d = civil.Date{Year: t.Year(), Month: t.Month(), Day: t.Day()}
-							}
-							vals[fieldName] = &d
-						}
-					} else {
-						if hasNullableInfo {
-
-							d, err := civil.ParseDate(*val)
-							if err != nil {
-								t, _ := time.Parse(time.RFC3339, *val)
-								d = civil.Date{Year: t.Year(), Month: t.Month(), Day: t.Day()}
-							}
-							vals[fieldName] = d
-						}
-					}
-				case "TIME":
-					if nullable || !hasNullableInfo {
-						if val == nil {
-							vals[fieldName] = (*civil.Time)(nil)
-						} else {
-							t, _ := civil.ParseTime(*val)
-							vals[fieldName] = &t
-						}
-					} else {
-						if hasNullableInfo {
-
-							t, _ := civil.ParseTime(*val)
-							vals[fieldName] = t
-						}
-					}
-
-				default:
-
-					if nullable || !hasNullableInfo {
-						vals[fieldName] = val
-					} else {
-						if hasNullableInfo {
-
-							vals[fieldName] = *val
-						}
-					}
+			if o.Raw == true {
+				for colID, elem := range rowData {
+					fieldName := cols[colID].Name()
+					vals[fieldName] = elem.(*[]byte)
 				}
 				DaFpLSjFbcXoEFf.Unwind()
+			} else {
+				for colID, elem := range rowData {
+
+					colType := cols[colID].DatabaseTypeName()
+					fieldName := cols[colID].Name()
+					nullable, hasNullableInfo := cols[colID].Nullable()
+
+					var val *string
+
+					raw := elem.(*[]byte)
+					if !(raw == nil || *raw == nil) {
+						val = &[]string{string(*raw)}[0]
+					}
+
+					switch colType {
+					case "NULL":
+						vals[fieldName] = nil
+					case "CHAR", "VARCHAR", "TEXT", "NVARCHAR", "MEDIUMTEXT", "LONGTEXT":
+						if nullable || !hasNullableInfo {
+							vals[fieldName] = val
+						} else {
+							if hasNullableInfo {
+
+								vals[fieldName] = *val
+							}
+						}
+					case "FLOAT", "DOUBLE", "DECIMAL", "NUMERIC", "FLOAT4", "FLOAT8":
+						if nullable || !hasNullableInfo {
+							if val == nil {
+								vals[fieldName] = (*float64)(nil)
+							} else {
+								f, _ := strconv.ParseFloat(*val, 64)
+								vals[fieldName] = &f
+							}
+						} else {
+							if hasNullableInfo {
+
+								f, _ := strconv.ParseFloat(*val, 64)
+								vals[fieldName] = f
+							}
+						}
+					case "INT", "TINYINT", "INT2", "INT4", "INT8", "MEDIUMINT", "SMALLINT", "BIGINT":
+
+						var (
+							i64 *int64
+							u64 *uint64
+						)
+
+						if val != nil {
+							if n, err := strconv.ParseInt(*val, 10, 64); err == nil {
+								i64 = &n
+							}
+							if u, err := strconv.ParseUint(*val, 10, 64); err == nil {
+								u64 = &u
+							}
+						}
+
+						switch cols[colID].ScanType().Kind() {
+						case reflect.Uint:
+							if nullable || !hasNullableInfo {
+								if val == nil {
+									vals[fieldName] = (*uint)(nil)
+								} else {
+									vals[fieldName] = &[]uint{uint(*u64)}[0]
+								}
+							} else {
+								if hasNullableInfo {
+
+									vals[fieldName] = uint(*u64)
+								}
+							}
+						case reflect.Uint8:
+							if nullable || !hasNullableInfo {
+								if val == nil {
+									vals[fieldName] = (*uint8)(nil)
+								} else {
+									vals[fieldName] = &[]uint8{uint8(*u64)}[0]
+								}
+							} else {
+								if hasNullableInfo {
+
+									vals[fieldName] = uint8(*u64)
+								}
+							}
+						case reflect.Uint16:
+							if nullable || !hasNullableInfo {
+								if val == nil {
+									vals[fieldName] = (*uint16)(nil)
+								} else {
+									vals[fieldName] = &[]uint16{uint16(*u64)}[0]
+								}
+							} else {
+								if hasNullableInfo {
+
+									vals[fieldName] = uint16(*u64)
+								}
+							}
+						case reflect.Uint32:
+							if nullable || !hasNullableInfo {
+								if val == nil {
+									vals[fieldName] = (*uint32)(nil)
+								} else {
+									vals[fieldName] = &[]uint32{uint32(*u64)}[0]
+								}
+							} else {
+								if hasNullableInfo {
+
+									vals[fieldName] = uint32(*u64)
+								}
+							}
+						case reflect.Uint64:
+							if nullable || !hasNullableInfo {
+								if val == nil {
+									vals[fieldName] = (*uint64)(nil)
+								} else {
+									vals[fieldName] = &[]uint64{*u64}[0]
+								}
+							} else {
+								if hasNullableInfo {
+
+									vals[fieldName] = *u64
+								}
+							}
+						case reflect.Int:
+							if nullable || !hasNullableInfo {
+								if val == nil {
+									vals[fieldName] = (*int)(nil)
+								} else {
+									vals[fieldName] = &[]int{int(*i64)}[0]
+								}
+							} else {
+								if hasNullableInfo {
+
+									vals[fieldName] = int(*i64)
+								}
+							}
+						case reflect.Int8:
+							if nullable || !hasNullableInfo {
+								if val == nil {
+									vals[fieldName] = (*int8)(nil)
+								} else {
+									vals[fieldName] = &[]int8{int8(*i64)}[0]
+								}
+							} else {
+								if hasNullableInfo {
+
+									vals[fieldName] = int8(*i64)
+								}
+							}
+						case reflect.Int16:
+							if nullable || !hasNullableInfo {
+								if val == nil {
+									vals[fieldName] = (*int16)(nil)
+								} else {
+									vals[fieldName] = &[]int16{int16(*i64)}[0]
+								}
+							} else {
+								if hasNullableInfo {
+
+									vals[fieldName] = int16(*i64)
+								}
+							}
+						case reflect.Int32:
+							if nullable || !hasNullableInfo {
+								if val == nil {
+									vals[fieldName] = (*int32)(nil)
+								} else {
+									vals[fieldName] = &[]int32{int32(*i64)}[0]
+								}
+							} else {
+								if hasNullableInfo {
+
+									vals[fieldName] = int32(*i64)
+								}
+							}
+						case reflect.Int64:
+							if nullable || !hasNullableInfo {
+								if val == nil {
+									vals[fieldName] = (*int64)(nil)
+								} else {
+									vals[fieldName] = &[]int64{*i64}[0]
+								}
+							} else {
+								if hasNullableInfo {
+
+									vals[fieldName] = *i64
+								}
+							}
+						default:
+							if nullable || !hasNullableInfo {
+								if val == nil {
+									vals[fieldName] = (*int64)(nil)
+								} else {
+									vals[fieldName] = &[]int64{*i64}[0]
+								}
+							} else {
+								if hasNullableInfo {
+
+									vals[fieldName] = *i64
+								}
+							}
+						}
+					case "BOOL":
+						if nullable || !hasNullableInfo {
+							if val == nil {
+								vals[fieldName] = (*bool)(nil)
+							} else {
+								if *val == "true" || *val == "TRUE" || *val == "1" {
+									vals[fieldName] = &[]bool{true}[0]
+								} else {
+									vals[fieldName] = &[]bool{false}[0]
+								}
+							}
+						} else {
+							if hasNullableInfo {
+
+								if *val == "true" || *val == "TRUE" || *val == "1" {
+									vals[fieldName] = true
+								} else {
+									vals[fieldName] = false
+								}
+							}
+						}
+					case "DATETIME", "TIMESTAMP", "TIMESTAMPTZ":
+						if nullable || !hasNullableInfo {
+							if val == nil {
+								vals[fieldName] = (*time.Time)(nil)
+							} else {
+								t, err := time.Parse("2006-01-02 15:04:05", *val)
+								if err != nil {
+									t, _ = time.Parse(time.RFC3339, *val)
+								}
+								vals[fieldName] = &t
+							}
+						} else {
+							if hasNullableInfo {
+
+								t, err := time.Parse("2006-01-02 15:04:05", *val)
+								if err != nil {
+									t, _ = time.Parse(time.RFC3339, *val)
+								}
+								vals[fieldName] = &t
+							}
+						}
+					case "JSON", "JSONB":
+						if val == nil {
+							vals[fieldName] = nil
+						} else {
+							var jData interface{}
+							json.Unmarshal(*raw, &jData)
+							vals[fieldName] = jData
+						}
+					case "DATE":
+						if nullable || !hasNullableInfo {
+							if val == nil {
+								vals[fieldName] = (*civil.Date)(nil)
+							} else {
+								d, err := civil.ParseDate(*val)
+								if err != nil {
+									t, _ := time.Parse(time.RFC3339, *val)
+									d = civil.Date{Year: t.Year(), Month: t.Month(), Day: t.Day()}
+								}
+								vals[fieldName] = &d
+							}
+						} else {
+							if hasNullableInfo {
+
+								d, err := civil.ParseDate(*val)
+								if err != nil {
+									t, _ := time.Parse(time.RFC3339, *val)
+									d = civil.Date{Year: t.Year(), Month: t.Month(), Day: t.Day()}
+								}
+								vals[fieldName] = d
+							}
+						}
+					case "TIME":
+						if nullable || !hasNullableInfo {
+							if val == nil {
+								vals[fieldName] = (*civil.Time)(nil)
+							} else {
+								t, _ := civil.ParseTime(*val)
+								vals[fieldName] = &t
+							}
+						} else {
+							if hasNullableInfo {
+
+								t, _ := civil.ParseTime(*val)
+								vals[fieldName] = t
+							}
+						}
+
+					default:
+
+						if nullable || !hasNullableInfo {
+							vals[fieldName] = val
+						} else {
+							if hasNullableInfo {
+
+								vals[fieldName] = *val
+							}
+						}
+					}
+					DaFpLSjFbcXoEFf.Unwind()
+				}
 			}
 
 			if o.ConcreteStruct != nil {
