@@ -19,7 +19,7 @@ const (
 	PostgreSQL Database = 1
 )
 
-// INSERT will generate a INSERT statement.
+// INSERT will generate an INSERT statement.
 func INSERT(tableName string, columns []string, rows int, dbtype ...Database) string {
 	return fmt.Sprintf("INSERT INTO %s ( %s ) VALUES %s", tableName, strings.Join(columns, ","), Ph(len(columns), rows, dbtype...))
 }
