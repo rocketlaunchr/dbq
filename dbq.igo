@@ -106,9 +106,11 @@ func MustQ(ctx context.Context, db ExecContexter, query string, options *Options
 // For queries, a []map[string]interface{} is ordinarily returned. Each result (an item in the slice) contains
 // a map where the keys are the columns, and the values are the data for the column.
 // When a ConcreteStruct is provided via the Options, the mapstructure package is used to automatically
-// return []structs instead.
+// return []structs instead. args is a list of values to replace the placeholders in the query. A single slice
+// (of any slice type) can be provided for the first arg. If so, the values will automatically be flattened to a list 
+// of interface{}.
 //
-// NOTE: sql.ErrNoRows is never returned as an error. Usually, a single item slice is returned, unless the
+// NOTE: sql.ErrNoRows is never returned as an error: usually, a single item slice is returned, unless the
 // behavior is modified by the SingleResult Option.
 func Q(ctx context.Context, db interface{}, query string, options *Options, args ...interface{}) (out interface{}, rErr error) {
 
@@ -188,8 +190,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 					if raw == nil || *raw == nil {
 						vals[fieldName] = nil
 					} else {
-						val = []string{string(*raw)}[0]
-						vals[fieldName] = val
+						vals[fieldName] = string(*raw)
 					}
 				}
 			} else {

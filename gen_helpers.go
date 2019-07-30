@@ -22,7 +22,7 @@ const (
 	PostgreSQL Database = 1
 )
 
-// INSERT will generate a INSERT statement.
+// INSERT will generate an INSERT statement.
 func INSERT(tableName string, columns []string, rows int, dbtype ...Database) string {
 	return fmt.Sprintf("INSERT INTO %s ( %s ) VALUES %s", tableName, strings.Join(columns, ","), Ph(len(columns), rows, dbtype...))
 }
@@ -45,19 +45,19 @@ func Ph(columnsN, rows int, dbtype ...Database) string {
 	var singleValuesStr string
 
 	varCount := 1
-	QleQYhYzRyWJjPj := fordefer.NewStack(true)
-	defer QleQYhYzRyWJjPj.Unwind()
+	zpfRFEgmotaFetH := fordefer.NewStack(true)
+	defer zpfRFEgmotaFetH.Unwind()
 	for i := 1; i <= rows; i++ {
 		singleValuesStr = singleValuesStr + "("
-		zpfRFEgmotaFetH := fordefer.NewStack(true)
-		defer zpfRFEgmotaFetH.Unwind()
+		sbZRjxAwnwekrBE := fordefer.NewStack(true)
+		defer sbZRjxAwnwekrBE.Unwind()
 		for j := 1; j <= columnsN; j++ {
 			singleValuesStr = singleValuesStr + fmt.Sprintf("$%d,", varCount)
 			varCount++
-			zpfRFEgmotaFetH.Unwind()
+			sbZRjxAwnwekrBE.Unwind()
 		}
 		singleValuesStr = strings.TrimSuffix(singleValuesStr, ",") + "),"
-		QleQYhYzRyWJjPj.Unwind()
+		zpfRFEgmotaFetH.Unwind()
 	}
 
 	return strings.TrimSuffix(singleValuesStr, ",")
@@ -67,11 +67,11 @@ func sliceConv(arg reflect.Value) []interface{} {
 	out := []interface{}{}
 
 	if arg.Kind() == reflect.Slice {
-		sbZRjxAwnwekrBE := fordefer.NewStack(true)
-		defer sbZRjxAwnwekrBE.Unwind()
+		mfdzdcEkXBAkjQZ := fordefer.NewStack(true)
+		defer mfdzdcEkXBAkjQZ.Unwind()
 		for i := 0; i < arg.Len(); i++ {
 			out = append(out, sliceConv(reflect.ValueOf(arg.Index(i).Interface()))...)
-			sbZRjxAwnwekrBE.Unwind()
+			mfdzdcEkXBAkjQZ.Unwind()
 		}
 	} else {
 		out = append(out, arg.Interface())
