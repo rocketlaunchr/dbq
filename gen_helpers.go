@@ -9,6 +9,9 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
+
+	"github.com/mitchellh/mapstructure"
 )
 
 // Database is used to set the Database.
@@ -78,4 +81,20 @@ func sliceConv(arg reflect.Value) []interface{} {
 	}
 
 	return out
+}
+
+// StdTimeConversionConfig provides a standard configuration for unmarshaling
+// to a struct. It properly converts timestamps and datetime columns into
+// time.Time objects. It assumes a MySQL database as default.
+func StdTimeConversionConfig(dbtype ...Database) *StructorConfig {
+
+	layout := "2006-01-02 15:04:05"
+	if len(dbtype) > 0 && dbtype[0] == PostgreSQL {
+		layout = time.RFC3339
+	}
+
+	return &StructorConfig{
+		DecodeHook:       mapstructure.StringToTimeHookFunc(layout),
+		WeaklyTypedInput: true,
+	}
 }
