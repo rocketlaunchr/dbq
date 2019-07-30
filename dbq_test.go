@@ -11,6 +11,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/go-cmp/cmp"
+	"github.com/mitchellh/mapstructure"
 )
 
 type AnyTime struct{}
@@ -22,12 +23,12 @@ func (a AnyTime) Match(v driver.Value) bool {
 }
 
 type store struct {
-	ID        int64   `dbq:"id"`
-	Product   string  `dbq:"product"`
-	Price     float64 `dbq:"price"`
-	Quantity  int64   `dbq:"quantity"`
-	Available int64   `dbq:"available"`
-	DateAdded string  `dbq:"date_added"`
+	ID        int64     `dbq:"id"`
+	Product   string    `dbq:"product"`
+	Price     float64   `dbq:"price"`
+	Quantity  int64     `dbq:"quantity"`
+	Available int64     `dbq:"available"`
+	DateAdded time.Time `dbq:"date_added"`
 }
 
 func TestMustQ(t *testing.T) {
@@ -37,7 +38,8 @@ func TestMustQ(t *testing.T) {
 	}
 	defer db.Close()
 
-	tRef := "2006-01-02 15:04:05"
+	// tRef := "2006-01-02 15:04:05"
+	tRef := time.Now()
 
 	rows := sqlmock.NewRows([]string{"id", "product", "price", "quantity", "available", "date_added"}).
 		AddRow(int64(1), "wrist watch", float64(45000.98), int64(6), int64(1), tRef).
@@ -83,7 +85,9 @@ func TestMustQ(t *testing.T) {
 	ctx := context.Background()
 
 	// Testing Multiple Data select with MustQ
-	opts := &Options{ConcreteStruct: store{}, DecoderConfig: &StructorConfig{WeaklyTypedInput: true}}
+	opts := &Options{ConcreteStruct: store{}, DecoderConfig: &StructorConfig{
+		DecodeHook:       mapstructure.StringToTimeHookFunc(time.RFC3339),
+		WeaklyTypedInput: true}}
 
 	actual := MustQ(ctx, db, "SELECT * FROM store", opts)
 
@@ -99,25 +103,12 @@ func TestMustQ(t *testing.T) {
 	}
 
 	// Testing Single Data Select
-	opts2 := &Options{ConcreteStruct: store{}, DecoderConfig: &StructorConfig{WeaklyTypedInput: true}, SingleResult: true}
+	opts2 := &Options{ConcreteStruct: store{}, DecoderConfig: &StructorConfig{
+		DecodeHook:       mapstructure.StringToTimeHookFunc(time.RFC3339),
+		WeaklyTypedInput: true}, SingleResult: true}
 
 	// Test Select return at most 1 result
 	_ = MustQ(ctx, db, "SELECT * FROM store LIMIT 1", opts2)
-	// _ = actualResults
-	// var result store
-	// config := &mapstructure.DecoderConfig{
-	// 	WeaklyTypedInput: true,
-	// 	Result:           &result,
-	// 	TagName:          "dbq",
-	// }
-
-	// decoder, err := mapstructure.NewDecoder(config)
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// err = decoder.Decode(actualResults.([]interface{})[0].(map[string]interface{}))
-	// fmt.Println(spew.Sdump(result))
 
 	// we make sure that all expectations were met
 	if err := mock.ExpectationsWereMet(); err != nil {
@@ -134,7 +125,8 @@ func TestMustE(t *testing.T) {
 	}
 	defer db.Close()
 
-	tRef := "2006-01-02 15:04:05"
+	// tRef := "2006-01-02 15:04:05"
+	tRef := time.Now()
 
 	mock.ExpectQuery("^SELECT (.+) FROM store$").
 		WillReturnError(fmt.Errorf("There was error while executing statement"))
@@ -146,17 +138,17 @@ func TestMustE(t *testing.T) {
 	// This is for batch Insert with MySQL
 	mock.ExpectExec("INSERT INTO store").
 		WithArgs(
-			int64(6), "Dish Washer", float64(45534.34), int64(34), int64(1), tRef,
-			int64(7), "Sewing Machine", float64(9843.35), int64(8), int64(0), tRef,
-			int64(8), "Private Jet", float64(98748594.34), int64(2), int64(1), tRef).
+			int64(6), "Dish Washer", float64(45534.34), int64(34), int64(1), AnyTime{},
+			int64(7), "Sewing Machine", float64(9843.35), int64(8), int64(0), AnyTime{},
+			int64(8), "Private Jet", float64(98748594.34), int64(2), int64(1), AnyTime{}).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	// This is for batch insert with PostgreSQL
 	mock.ExpectExec("INSERT INTO store").
 		WithArgs(
-			int64(6), "Dish Washer", float64(45534.34), int64(34), int64(1), tRef,
-			int64(7), "Sewing Machine", float64(9843.35), int64(8), int64(0), tRef,
-			int64(8), "Private Jet", float64(98748594.34), int64(2), int64(1), tRef).
+			int64(6), "Dish Washer", float64(45534.34), int64(34), int64(1), AnyTime{},
+			int64(7), "Sewing Machine", float64(9843.35), int64(8), int64(0), AnyTime{},
+			int64(8), "Private Jet", float64(98748594.34), int64(2), int64(1), AnyTime{}).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	mock.ExpectExec("UPDATE store SET product").
@@ -170,7 +162,9 @@ func TestMustE(t *testing.T) {
 	ctx := context.Background()
 
 	// Error testing on Select Query
-	opts := &Options{ConcreteStruct: store{}, DecoderConfig: &StructorConfig{WeaklyTypedInput: true}}
+	opts := &Options{ConcreteStruct: store{}, DecoderConfig: &StructorConfig{
+		DecodeHook:       mapstructure.StringToTimeHookFunc("2006-01-02 15:04:05"),
+		WeaklyTypedInput: true}}
 
 	_, err = E(ctx, db, "SELECT * FROM store", opts)
 	if err == nil {
@@ -193,12 +187,12 @@ func TestMustE(t *testing.T) {
 	// batch insert statement on MySQL
 	stmt := INSERT("store", []string{"id", "product", "price", "quantity", "available", "date_added"}, len(storeProducts), MySQL)
 
-	_ = MustE(ctx, db, stmt, nil, storeProducts)
+	_ = MustE(ctx, db, stmt, opts, storeProducts)
 
 	// batch insert statement on PostgreSQL
 	stmt2 := INSERT("store", []string{"id", "product", "price", "quantity", "available", "date_added"}, len(storeProducts), PostgreSQL)
 
-	_ = MustE(ctx, db, stmt2, nil, storeProducts)
+	_ = MustE(ctx, db, stmt2, opts, storeProducts)
 
 	// Testing Data update with MustE
 
