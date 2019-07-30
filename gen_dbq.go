@@ -203,7 +203,6 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 				defer DaFpLSjFbcXoEFf.Unwind()
 				for colID, elem := range rowData {
 					fieldName := cols[colID].Name()
-					var val string
 					raw := elem.(*[]byte)
 					if raw == nil || *raw == nil {
 						vals[fieldName] = nil
