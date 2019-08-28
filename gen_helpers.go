@@ -27,13 +27,15 @@ const (
 
 // INSERT will generate an INSERT statement.
 func INSERT(tableName string, columns []string, rows int, dbtype ...Database) string {
-	return fmt.Sprintf("INSERT INTO %s ( %s ) VALUES %s", tableName, strings.Join(columns, ","), Ph(len(columns), rows, dbtype...))
+	return fmt.Sprintf("INSERT INTO %s ( %s ) VALUES %s", tableName, strings.Join(columns, ","), Ph(len(columns), rows, 0, dbtype...))
 }
 
 // Ph generates the placeholders for SQL queries.
 // For a bulk insert operation, rows is the number of rows you intend
 // to insert, and columnsN is the number of fields per row.
-func Ph(columnsN, rows int, dbtype ...Database) string {
+// For the IN function, set rows to 1.
+// For PostgreSQL, you can use incr to increment to placeholder starting count.
+func Ph(columnsN, rows int, incr int, dbtype ...Database) string {
 
 	var typ Database
 	if len(dbtype) > 0 {
@@ -47,7 +49,7 @@ func Ph(columnsN, rows int, dbtype ...Database) string {
 
 	var singleValuesStr string
 
-	varCount := 1
+	varCount := 1 + incr
 	zpfRFEgmotaFetH := fordefer.NewStack(true)
 	defer zpfRFEgmotaFetH.Unwind()
 	for i := 1; i <= rows; i++ {
