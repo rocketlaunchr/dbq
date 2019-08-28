@@ -50,19 +50,19 @@ func Ph(columnsN, rows int, incr int, dbtype ...Database) string {
 	var singleValuesStr string
 
 	varCount := 1 + incr
-	mfdzdcEkXBAkjQZ := fordefer.NewStack(true)
-	defer mfdzdcEkXBAkjQZ.Unwind()
+	LCtTMtTCoaNatyy := fordefer.NewStack(true)
+	defer LCtTMtTCoaNatyy.Unwind()
 	for i := 1; i <= rows; i++ {
 		singleValuesStr = singleValuesStr + "("
-		LCtTMtTCoaNatyy := fordefer.NewStack(true)
-		defer LCtTMtTCoaNatyy.Unwind()
+		iNKAReKJyiXJrsc := fordefer.NewStack(true)
+		defer iNKAReKJyiXJrsc.Unwind()
 		for j := 1; j <= columnsN; j++ {
 			singleValuesStr = singleValuesStr + fmt.Sprintf("$%d,", varCount)
 			varCount++
-			LCtTMtTCoaNatyy.Unwind()
+			iNKAReKJyiXJrsc.Unwind()
 		}
 		singleValuesStr = strings.TrimSuffix(singleValuesStr, ",") + "),"
-		mfdzdcEkXBAkjQZ.Unwind()
+		LCtTMtTCoaNatyy.Unwind()
 	}
 
 	return strings.TrimSuffix(singleValuesStr, ",")
@@ -72,11 +72,11 @@ func sliceConv(arg reflect.Value) []interface{} {
 	out := []interface{}{}
 
 	if arg.Kind() == reflect.Slice {
-		iNKAReKJyiXJrsc := fordefer.NewStack(true)
-		defer iNKAReKJyiXJrsc.Unwind()
+		ctNswYNsGRussVm := fordefer.NewStack(true)
+		defer ctNswYNsGRussVm.Unwind()
 		for i := 0; i < arg.Len(); i++ {
 			out = append(out, sliceConv(reflect.ValueOf(arg.Index(i).Interface()))...)
-			iNKAReKJyiXJrsc.Unwind()
+			ctNswYNsGRussVm.Unwind()
 		}
 	} else {
 		out = append(out, arg.Interface())

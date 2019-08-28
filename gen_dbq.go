@@ -9,6 +9,7 @@ import (
 	"context"
 	stdSql "database/sql"
 	"encoding/json"
+	"golang.org/x/xerrors"
 	"reflect"
 	"strconv"
 	"strings"
@@ -52,6 +53,15 @@ type StructorConfig struct {
 	WeaklyTypedInput bool
 }
 
+// PostUnmarshaler allows you to further modify all results after unmarshaling.
+// The ConcreteStruct pointer must implement this interface to make use of this feature.
+type PostUnmarshaler interface {
+
+	// PostUnmarshal is called for each row after all results have been fetched.
+	// You can use it to further modify the values of each ConcreteStruct.
+	PostUnmarshal(row, count int) error
+}
+
 // SingleResult is a convenient option for the common case of expecting
 // a single result from a query.
 var SingleResult = &Options{SingleResult: true}
@@ -83,11 +93,11 @@ type Options struct {
 // MustE is a wrapper around the E function. It will panic upon encountering an error.
 // This can erradicate boiler-plate error handing code.
 func MustE(ctx context.Context, db ExecContexter, query string, options *Options, args ...interface{}) stdSql.Result {
-	gmotaF, etHsbZ := E(ctx, db, query, options, args...)
-	if etHsbZ != nil {
-		panic(etHsbZ)
+	Awnwek, rBEmfd := E(ctx, db, query, options, args...)
+	if rBEmfd != nil {
+		panic(rBEmfd)
 	}
-	return gmotaF
+	return Awnwek
 }
 
 // E is a wrapper around the Q function. It is used for "Exec" queries such as insert, update and delete.
@@ -105,11 +115,11 @@ func E(ctx context.Context, db ExecContexter, query string, options *Options, ar
 // MustQ is a wrapper around the Q function. It will panic upon encountering an error.
 // This can erradicate boiler-plate error handing code.
 func MustQ(ctx context.Context, db ExecContexter, query string, options *Options, args ...interface{}) interface{} {
-	RjxAwn, wekrBE := Q(ctx, db, query, options, args...)
-	if wekrBE != nil {
-		panic(wekrBE)
+	zdcEkX, BAkjQZ := Q(ctx, db, query, options, args...)
+	if BAkjQZ != nil {
+		panic(BAkjQZ)
 	}
-	return RjxAwn
+	return zdcEkX
 }
 
 // Q is a convenience function that is used for inserting, updating, deleting, and querying a SQL database.
@@ -577,6 +587,27 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 
 		if err := rows.Err(); err != nil {
 			return nil, err
+		}
+
+		if o.ConcreteStruct != nil && len(out) > 0 {
+			csTyp := reflect.TypeOf(reflect.New(reflect.TypeOf(o.ConcreteStruct)).Interface())
+			ics := reflect.TypeOf((*PostUnmarshaler)(nil)).Elem()
+
+			if csTyp.Implements(ics) {
+				rows := reflect.ValueOf(out)
+				count := rows.Len()
+				gmotaFetHsbZRjx := fordefer.NewStack(true)
+				defer gmotaFetHsbZRjx.Unwind()
+				for i := 0; i < count; i++ {
+					row := reflect.ValueOf(rows.Index(i).Interface())
+					retVals := row.MethodByName("PostUnmarshal").Call([]reflect.Value{reflect.ValueOf(i), reflect.ValueOf(count)})
+					err := retVals[0].Interface()
+					if err != nil {
+						return nil, xerrors.Errorf("dbq.PostUnmarshal(%d, %d): %w", i, count, err)
+					}
+					gmotaFetHsbZRjx.Unwind()
+				}
+			}
 		}
 
 		return out, nil

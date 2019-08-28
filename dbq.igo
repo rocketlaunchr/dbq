@@ -6,6 +6,7 @@ import (
 	"context"
 	stdSql "database/sql"
 	"encoding/json"
+	"golang.org/x/xerrors"
 	"reflect"
 	"strconv"
 	"strings"
@@ -47,6 +48,15 @@ type StructorConfig struct {
 	//     if the target type is an int slice.
 	//
 	WeaklyTypedInput bool
+}
+
+// PostUnmarshaler allows you to further modify all results after unmarshaling.
+// The ConcreteStruct pointer must implement this interface to make use of this feature.
+type PostUnmarshaler interface {
+
+	// PostUnmarshal is called for each row after all results have been fetched.
+	// You can use it to further modify the values of each ConcreteStruct.
+	PostUnmarshal(row, count int) error
 }
 
 // SingleResult is a convenient option for the common case of expecting
@@ -552,6 +562,25 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 
 		if err := rows.Err(); err != nil {
 			return nil, err
+		}
+
+		// Call PostUnmarshaler
+		if o.ConcreteStruct != nil && len(out) > 0 {
+			csTyp := reflect.TypeOf(reflect.New(reflect.TypeOf(o.ConcreteStruct)).Interface())
+			ics := reflect.TypeOf((*PostUnmarshaler)(nil)).Elem()
+
+			if csTyp.Implements(ics) {
+				rows := reflect.ValueOf(out)
+				count := rows.Len()
+				for i := 0; i < count; i++ {
+					row := reflect.ValueOf(rows.Index(i).Interface())
+					retVals := row.MethodByName("PostUnmarshal").Call([]reflect.Value{reflect.ValueOf(i), reflect.ValueOf(count)})
+					err := retVals[0].Interface()
+					if err != nil {
+						return nil, xerrors.Errorf("dbq.PostUnmarshal(%d, %d): %w", i, count, err)
+					}
+				}
+			}
 		}
 
 		return out, nil
