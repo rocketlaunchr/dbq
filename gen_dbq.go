@@ -83,11 +83,11 @@ type Options struct {
 // MustE is a wrapper around the E function. It will panic upon encountering an error.
 // This can erradicate boiler-plate error handing code.
 func MustE(ctx context.Context, db ExecContexter, query string, options *Options, args ...interface{}) stdSql.Result {
-	lgTeMa, PEZQle := E(ctx, db, query, options, args...)
-	if PEZQle != nil {
-		panic(PEZQle)
+	gmotaF, etHsbZ := E(ctx, db, query, options, args...)
+	if etHsbZ != nil {
+		panic(etHsbZ)
 	}
-	return lgTeMa
+	return gmotaF
 }
 
 // E is a wrapper around the Q function. It is used for "Exec" queries such as insert, update and delete.
@@ -105,11 +105,11 @@ func E(ctx context.Context, db ExecContexter, query string, options *Options, ar
 // MustQ is a wrapper around the Q function. It will panic upon encountering an error.
 // This can erradicate boiler-plate error handing code.
 func MustQ(ctx context.Context, db ExecContexter, query string, options *Options, args ...interface{}) interface{} {
-	QYhYzR, yWJjPj := Q(ctx, db, query, options, args...)
-	if yWJjPj != nil {
-		panic(yWJjPj)
+	RjxAwn, wekrBE := Q(ctx, db, query, options, args...)
+	if wekrBE != nil {
+		panic(wekrBE)
 	}
-	return QYhYzR
+	return RjxAwn
 }
 
 // Q is a convenience function that is used for inserting, updating, deleting, and querying a SQL database.
@@ -151,11 +151,30 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 	query = strings.TrimSpace(query)
 	queryType := query[0:6]
 
-	if len(args) == 1 {
-
-		if arg := reflect.ValueOf(args[0]); arg.Kind() == reflect.Slice {
-			args = sliceConv(arg)
+	foundSliceArg := false
+	XVlBzgbaiCMRAjW := fordefer.NewStack(true)
+	defer XVlBzgbaiCMRAjW.Unwind()
+	for _, v := range args {
+		if arg := reflect.ValueOf(v); arg.Kind() == reflect.Slice {
+			foundSliceArg = true
+			break
 		}
+		XVlBzgbaiCMRAjW.Unwind()
+	}
+
+	if foundSliceArg {
+		newArgs := []interface{}{}
+		whTHctcuAxhxKQF := fordefer.NewStack(true)
+		defer whTHctcuAxhxKQF.Unwind()
+		for _, v := range args {
+			if arg := reflect.ValueOf(v); arg.Kind() == reflect.Slice {
+				newArgs = append(newArgs, sliceConv(arg)...)
+			} else {
+				newArgs = append(newArgs, v)
+			}
+			whTHctcuAxhxKQF.Unwind()
+		}
+		args = newArgs
 	}
 
 	if queryType == "INSERT" || queryType == "insert" {
@@ -180,17 +199,17 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 			return nil, err
 		}
 		totalColumns := len(cols)
-		XVlBzgbaiCMRAjW := fordefer.NewStack(true)
-		defer XVlBzgbaiCMRAjW.Unwind()
+		DaFpLSjFbcXoEFf := fordefer.NewStack(true)
+		defer DaFpLSjFbcXoEFf.Unwind()
 
 		for rows.Next() {
 
 			rowData := make([]interface{}, totalColumns)
-			whTHctcuAxhxKQF := fordefer.NewStack(true)
-			defer whTHctcuAxhxKQF.Unwind()
+			RsWxPLDnJObCsNV := fordefer.NewStack(true)
+			defer RsWxPLDnJObCsNV.Unwind()
 			for i := range rowData {
 				rowData[i] = &[]byte{}
-				whTHctcuAxhxKQF.Unwind()
+				RsWxPLDnJObCsNV.Unwind()
 			}
 
 			if err := rows.Scan(rowData...); err != nil {
@@ -199,8 +218,8 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 
 			vals := map[string]interface{}{}
 			if o.ConcreteStruct != nil {
-				DaFpLSjFbcXoEFf := fordefer.NewStack(true)
-				defer DaFpLSjFbcXoEFf.Unwind()
+				lgTeMaPEZQleQYh := fordefer.NewStack(true)
+				defer lgTeMaPEZQleQYh.Unwind()
 				for colID, elem := range rowData {
 					fieldName := cols[colID].Name()
 					raw := elem.(*[]byte)
@@ -209,11 +228,11 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 					} else {
 						vals[fieldName] = string(*raw)
 					}
-					DaFpLSjFbcXoEFf.Unwind()
+					lgTeMaPEZQleQYh.Unwind()
 				}
 			} else {
-				RsWxPLDnJObCsNV := fordefer.NewStack(true)
-				defer RsWxPLDnJObCsNV.Unwind()
+				YzRyWJjPjzpfRFE := fordefer.NewStack(true)
+				defer YzRyWJjPjzpfRFE.Unwind()
 				for colID, elem := range rowData {
 
 					colType := cols[colID].DatabaseTypeName()
@@ -515,7 +534,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							}
 						}
 					}
-					RsWxPLDnJObCsNV.Unwind()
+					YzRyWJjPjzpfRFE.Unwind()
 				}
 			}
 
@@ -547,7 +566,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 			} else {
 				out = append(out, vals)
 			}
-			XVlBzgbaiCMRAjW.Unwind()
+			DaFpLSjFbcXoEFf.Unwind()
 
 		}
 

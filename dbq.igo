@@ -140,11 +140,25 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 	query = strings.TrimSpace(query)
 	queryType := query[0:6]
 
-	if len(args) == 1 {
-		// Convert slice to []interface{}
-		if arg := reflect.ValueOf(args[0]); arg.Kind() == reflect.Slice {
-			args = sliceConv(arg)
+	// Check if any arguments are slices
+	foundSliceArg := false
+	for _, v := range args {
+		if arg := reflect.ValueOf(v); arg.Kind() == reflect.Slice {
+			foundSliceArg = true
+			break
 		}
+	}
+
+	if foundSliceArg {
+		newArgs := []interface{}{}
+		for _, v := range args {
+			if arg := reflect.ValueOf(v); arg.Kind() == reflect.Slice {
+				newArgs = append(newArgs, sliceConv(arg)...)
+			} else {
+				newArgs = append(newArgs, v)
+			}
+		}
+		args = newArgs
 	}
 
 	if queryType == "INSERT" || queryType == "insert" {
