@@ -603,7 +603,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 					retVals := row.MethodByName("PostUnmarshal").Call([]reflect.Value{reflect.ValueOf(i), reflect.ValueOf(count)})
 					err := retVals[0].Interface()
 					if err != nil {
-						return nil, xerrors.Errorf("dbq.PostUnmarshal(%d, %d): %w", i, count, err)
+						return nil, xerrors.Errorf("dbq.PostUnmarshal @ row %d: %w", i, err)
 					}
 					gmotaFetHsbZRjx.Unwind()
 				}
