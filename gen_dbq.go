@@ -88,6 +88,10 @@ type Options struct {
 	// single result directly (instead of wrapped in a slice). This makes it easier to
 	// type assert.
 	SingleResult bool
+
+	// PostFetch is called after all results are fetched but before PostUnmarshaler is calld (if applicable).
+	// It can be used to return a database connection back to the pool.
+	PostFetch func()
 }
 
 // MustE is a wrapper around the E function. It will panic upon encountering an error.
@@ -587,6 +591,10 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 
 		if err := rows.Err(); err != nil {
 			return nil, err
+		}
+
+		if o.PostFetch != nil {
+			o.PostFetch()
 		}
 
 		if o.ConcreteStruct != nil && len(out) > 0 {
