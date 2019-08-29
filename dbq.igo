@@ -6,6 +6,7 @@ import (
 	"context"
 	stdSql "database/sql"
 	"encoding/json"
+	"golang.org/x/xerrors"
 	"reflect"
 	"strconv"
 	"strings"
@@ -49,6 +50,15 @@ type StructorConfig struct {
 	WeaklyTypedInput bool
 }
 
+// PostUnmarshaler allows you to further modify all results after unmarshaling.
+// The ConcreteStruct pointer must implement this interface to make use of this feature.
+type PostUnmarshaler interface {
+
+	// PostUnmarshal is called for each row after all results have been fetched.
+	// You can use it to further modify the values of each ConcreteStruct.
+	PostUnmarshal(row, count int) error
+}
+
 // SingleResult is a convenient option for the common case of expecting
 // a single result from a query.
 var SingleResult = &Options{SingleResult: true}
@@ -75,6 +85,10 @@ type Options struct {
 	// single result directly (instead of wrapped in a slice). This makes it easier to
 	// type assert.
 	SingleResult bool
+
+	// PostFetch is called after all results are fetched but before PostUnmarshaler is called (if applicable).
+	// It can be used to return a database connection back to the pool.
+	PostFetch func()
 }
 
 // MustE is a wrapper around the E function. It will panic upon encountering an error.
@@ -140,11 +154,25 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 	query = strings.TrimSpace(query)
 	queryType := query[0:6]
 
-	if len(args) == 1 {
-		// Convert slice to []interface{}
-		if arg := reflect.ValueOf(args[0]); arg.Kind() == reflect.Slice {
-			args = sliceConv(arg)
+	// Check if any arguments are slices
+	foundSliceArg := false
+	for _, v := range args {
+		if arg := reflect.ValueOf(v); arg.Kind() == reflect.Slice {
+			foundSliceArg = true
+			break
 		}
+	}
+
+	if foundSliceArg {
+		newArgs := []interface{}{}
+		for _, v := range args {
+			if arg := reflect.ValueOf(v); arg.Kind() == reflect.Slice {
+				newArgs = append(newArgs, sliceConv(arg)...)
+			} else {
+				newArgs = append(newArgs, v)
+			}
+		}
+		args = newArgs
 	}
 
 	if queryType == "INSERT" || queryType == "insert" {
@@ -538,6 +566,30 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 
 		if err := rows.Err(); err != nil {
 			return nil, err
+		}
+
+		// Call PostFetch
+		if o.PostFetch != nil {
+			o.PostFetch()
+		}
+
+		// Call PostUnmarshaler
+		if o.ConcreteStruct != nil && len(out) > 0 {
+			csTyp := reflect.TypeOf(reflect.New(reflect.TypeOf(o.ConcreteStruct)).Interface())
+			ics := reflect.TypeOf((*PostUnmarshaler)(nil)).Elem()
+
+			if csTyp.Implements(ics) {
+				rows := reflect.ValueOf(out)
+				count := rows.Len()
+				for i := 0; i < count; i++ {
+					row := reflect.ValueOf(rows.Index(i).Interface())
+					retVals := row.MethodByName("PostUnmarshal").Call([]reflect.Value{reflect.ValueOf(i), reflect.ValueOf(count)})
+					err := retVals[0].Interface()
+					if err != nil {
+						return nil, xerrors.Errorf("dbq.PostUnmarshal @ row %d: %w", i, err)
+					}
+				}
+			}
 		}
 
 		return out, nil

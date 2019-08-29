@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mitchellh/mapstructure"
+	"cloud.google.com/go/civil"
 )
 
 // Database is used to set the Database.
@@ -24,13 +24,15 @@ const (
 
 // INSERT will generate an INSERT statement.
 func INSERT(tableName string, columns []string, rows int, dbtype ...Database) string {
-	return fmt.Sprintf("INSERT INTO %s ( %s ) VALUES %s", tableName, strings.Join(columns, ","), Ph(len(columns), rows, dbtype...))
+	return fmt.Sprintf("INSERT INTO %s ( %s ) VALUES %s", tableName, strings.Join(columns, ","), Ph(len(columns), rows, 0, dbtype...))
 }
 
 // Ph generates the placeholders for SQL queries.
 // For a bulk insert operation, rows is the number of rows you intend
 // to insert, and columnsN is the number of fields per row.
-func Ph(columnsN, rows int, dbtype ...Database) string {
+// For the IN function, set rows to 1.
+// For PostgreSQL, you can use incr to increment the placeholder starting count.
+func Ph(columnsN, rows int, incr int, dbtype ...Database) string {
 
 	var typ Database
 	if len(dbtype) > 0 {
@@ -44,7 +46,7 @@ func Ph(columnsN, rows int, dbtype ...Database) string {
 
 	var singleValuesStr string
 
-	varCount := 1
+	varCount := 1 + incr
 	for i := 1; i <= rows; i++ {
 		singleValuesStr = singleValuesStr + "("
 		for j := 1; j <= columnsN; j++ {
@@ -71,18 +73,60 @@ func sliceConv(arg reflect.Value) []interface{} {
 	return out
 }
 
-// StdTimeConversionConfig provides a standard configuration for unmarshaling
-// to a struct. It properly converts timestamps and datetime columns into
+// StdTimeConversionConfig provides a standard configuration for unmarshaling to
+// time-related fields in a struct. It properly converts timestamps and datetime columns into
 // time.Time objects. It assumes a MySQL database as default.
 func StdTimeConversionConfig(dbtype ...Database) *StructorConfig {
 
-	layout := "2006-01-02 15:04:05" // MySQL
+	layouts := []string{
+		"2006-01-02 15:04:05", // MySQL
+		time.RFC3339,          // PostgreSQL
+	}
+
 	if len(dbtype) > 0 && dbtype[0] == PostgreSQL {
-		layout = time.RFC3339
+		// Swap preferences
+		layouts[0], layouts[1] = layouts[1], layouts[0]
 	}
 
 	return &StructorConfig{
-		DecodeHook:       mapstructure.StringToTimeHookFunc(layout),
 		WeaklyTypedInput: true,
+		DecodeHook: func(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
+			if f.Kind() != reflect.String {
+				return data, nil
+			}
+
+			switch t {
+			case reflect.TypeOf(civil.Date{}):
+				return civil.ParseDate(data.(string))
+			case reflect.TypeOf(civil.DateTime{}):
+				t, err := time.Parse(layouts[0], data.(string))
+				if err != nil {
+					t, err = time.Parse(layouts[1], data.(string))
+					if err != nil {
+						return nil, err
+					}
+				}
+				return &civil.DateTime{
+					Date: civil.DateOf(t),
+					Time: civil.TimeOf(t),
+				}, nil
+			case reflect.TypeOf(civil.Time{}):
+				return civil.ParseTime(data.(string))
+			case reflect.TypeOf(time.Time{}):
+				t, err := time.Parse(layouts[0], data.(string))
+				if err != nil {
+					t, err := time.Parse(layouts[1], data.(string))
+					if err != nil {
+						return nil, err
+					}
+					return t, nil
+				}
+				return t, nil
+			default:
+				return data, nil
+			}
+
+			return data, nil
+		},
 	}
 }
