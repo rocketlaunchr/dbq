@@ -1,5 +1,4 @@
-dbq - Barbeque the boilerplate code [![GoDoc](http://godoc.org/github.com/rocketlaunchr/dbq?status.svg)](http://godoc.org/github.com/rocketlaunchr/dbq) [![Go Report Card](https://goreportcard.com/badge/github.com/rocketlaunchr/dbq)](https://goreportcard.com/report/github.com/rocketlaunchr/dbq)
-===============
+# dbq - Barbeque the boilerplate code [![GoDoc](http://godoc.org/github.com/rocketlaunchr/dbq?status.svg)](http://godoc.org/github.com/rocketlaunchr/dbq) [![Go Report Card](https://goreportcard.com/badge/github.com/rocketlaunchr/dbq)](https://goreportcard.com/report/github.com/rocketlaunchr/dbq)
 
 <p align="center">
 <img src="https://github.com/rocketlaunchr/dbq/raw/master/logo.png" alt="dbq" />
@@ -9,25 +8,24 @@ dbq - Barbeque the boilerplate code [![GoDoc](http://godoc.org/github.com/rocket
 
 Everyone knows that performing simple **DATABASE queries** in Go takes numerous lines of code that is often repetitive. If you want to avoid the cruft, you have two options: A heavy-duty ORM that is not up to the standard of Laraval or Django. Or DBQ!
 
-
 **WARNING: You will seriously reduce your database code to a few lines**
-
 
 ## What is included
 
-* Supports ANY type of query
-* **MySQL** and **PostgreSQL** compatible
-* **Convenient** and **Developer Friendly**
-* Bulk Insert seamlessly
-* Automatically unmarshal query results directly to a struct using [mapstructure](https://github.com/mitchellh/mapstructure) package
-* Lightweight
-* Compatible with [mysql-go](https://github.com/rocketlaunchr/mysql-go) for proper MySQL query cancelation
+- Supports ANY type of query
+- **MySQL** and **PostgreSQL** compatible
+- **Convenient** and **Developer Friendly**
+- Accepts any type of slice for query args
+- Flattens query arg slices to individual values
+- Bulk Insert seamlessly
+- Automatically unmarshal query results directly to a struct using [mapstructure](https://github.com/mitchellh/mapstructure) package
+- Lightweight
+- Compatible with [mysql-go](https://github.com/rocketlaunchr/mysql-go) for proper MySQL query cancelation
 
 ## Dependencies
 
-* [MySQL driver](https://github.com/go-sql-driver/mysql) OR
-* [PostgreSQL driver](https://github.com/lib/pq)
-
+- [MySQL driver](https://github.com/go-sql-driver/mysql) OR
+- [PostgreSQL driver](https://github.com/lib/pq)
 
 ## Installation
 
@@ -35,31 +33,28 @@ Everyone knows that performing simple **DATABASE queries** in Go takes numerous 
 go get -u github.com/rocketlaunchr/dbq
 ```
 
-
 ## Examples
 
 Let's assume a table called `users`:
 
-| id | name  | age | created_at |
-|----|-------|-----|------------|
-| 1  | Sally | 12  | 2019-03-01 |
-| 2  | Peter | 15  | 2019-02-01 |
-| 3  | Tom   | 18  | 2019-01-01 |
-
+| id  | name  | age | created_at |
+| --- | ----- | --- | ---------- |
+| 1   | Sally | 12  | 2019-03-01 |
+| 2   | Peter | 15  | 2019-02-01 |
+| 3   | Tom   | 18  | 2019-01-01 |
 
 ### Bulk Insert
 
 You can insert multiple rows at once.
-
 
 ```go
 
 db, _ := sql.Open("mysql", "user:password@tcp(localhost:3306)/db")
 
 users := []interface{}{
-	[]interface{}{"Brad", 45, time.Now()},
-	[]interface{}{"Ange", 36, time.Now()},
-	[]interface{}{"Emily", 22, time.Now()},
+  []interface{}{"Brad", 45, time.Now()},
+  []interface{}{"Ange", 36, time.Now()},
+  []interface{}{"Emily", 22, time.Now()},
 }
 
 stmt := dbq.INSERT("users", []string{"name", "age", "created_at"}, len(users))
@@ -76,10 +71,10 @@ unmarshal to a struct. You will need to type assert the results.
 ```go
 
 type user struct {
-	ID        int       `dbq:"id"`
-	Name      string    `dbq:"name"`
-	Age       int       `dbq:"age"`
-	CreatedAt time.Time `dbq:"created_at"`
+  ID        int       `dbq:"id"`
+  Name      string    `dbq:"name"`
+  Age       int       `dbq:"age"`
+  CreatedAt time.Time `dbq:"created_at"`
 }
 
 opts := &dbq.Options{ConcreteStruct: user{}, DecoderConfig:x}
@@ -138,9 +133,9 @@ If you know that the query will return at maximum 1 row:
 ```go
 result := dbq.MustQ(ctx, db, "SELECT * FROM users LIMIT 1", dbq.SingleResult)
 if result == nil {
-	// no result
+  // no result
 } else {
-	result.(map[string]interface{})
+  result.(map[string]interface{})
 }
 
 ```
@@ -166,18 +161,19 @@ defer conn.Close()
 
 result := dbq.MustQ(ctx, conn, "SELECT * FROM users LIMIT 1", dbq.SingleResult)
 if result == nil {
-	// no result
+  // no result
 } else {
-	result.(map[string]interface{})
+  result.(map[string]interface{})
 }
 ```
 
 ## Other useful packages
-* [remember-go](https://github.com/rocketlaunchr/remember-go) - Cache slow database queries
-* [mysql-go](https://github.com/rocketlaunchr/mysql-go) - Properly cancel slow MySQL queries
-* [react](https://github.com/rocketlaunchr/react) - Build front end applications using Go
-* [igo](https://github.com/rocketlaunchr/igo) - A Go transpiler with cool new syntax such as fordefer (defer for for-loops)
-* [dataframe-go](https://github.com/rocketlaunchr/dataframe-go) - Statistics and data manipulation.
+
+- [remember-go](https://github.com/rocketlaunchr/remember-go) - Cache slow database queries
+- [mysql-go](https://github.com/rocketlaunchr/mysql-go) - Properly cancel slow MySQL queries
+- [react](https://github.com/rocketlaunchr/react) - Build front end applications using Go
+- [igo](https://github.com/rocketlaunchr/igo) - A Go transpiler with cool new syntax such as fordefer (defer for for-loops)
+- [dataframe-go](https://github.com/rocketlaunchr/dataframe-go) - Statistics and data manipulation.
 
 #
 
