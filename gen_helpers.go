@@ -34,7 +34,7 @@ func INSERT(tableName string, columns []string, rows int, dbtype ...Database) st
 // For a bulk insert operation, rows is the number of rows you intend
 // to insert, and columnsN is the number of fields per row.
 // For the IN function, set rows to 1.
-// For PostgreSQL, you can use incr to increment to placeholder starting count.
+// For PostgreSQL, you can use incr to increment the placeholder starting count.
 func Ph(columnsN, rows int, incr int, dbtype ...Database) string {
 
 	var typ Database
@@ -85,7 +85,7 @@ func sliceConv(arg reflect.Value) []interface{} {
 	return out
 }
 
-// StdTimeConversionConfig provides a standard configuration for unmarshaling
+// StdTimeConversionConfig provides a standard configuration for unmarshaling to
 // time-related fields in a struct. It properly converts timestamps and datetime columns into
 // time.Time objects. It assumes a MySQL database as default.
 func StdTimeConversionConfig(dbtype ...Database) *StructorConfig {

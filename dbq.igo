@@ -86,7 +86,7 @@ type Options struct {
 	// type assert.
 	SingleResult bool
 
-	// PostFetch is called after all results are fetched but before PostUnmarshaler is calld (if applicable).
+	// PostFetch is called after all results are fetched but before PostUnmarshaler is called (if applicable).
 	// It can be used to return a database connection back to the pool.
 	PostFetch func()
 }
