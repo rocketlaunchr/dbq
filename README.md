@@ -146,7 +146,6 @@ To properly cancel a MySQL query, you need to use the [mysql-go](https://github.
 
 ```go
 import (
-   stdSql "database/sql"
    sql "github.com/rocketlaunchr/mysql-go"
 )
 
