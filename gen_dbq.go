@@ -59,7 +59,7 @@ type PostUnmarshaler interface {
 
 	// PostUnmarshal is called for each row after all results have been fetched.
 	// You can use it to further modify the values of each ConcreteStruct.
-	PostUnmarshal(row, count int) error
+	PostUnmarshal(ctx context.Context, row, count int) error
 }
 
 // SingleResult is a convenient option for the common case of expecting
@@ -91,7 +91,7 @@ type Options struct {
 
 	// PostFetch is called after all results are fetched but before PostUnmarshaler is called (if applicable).
 	// It can be used to return a database connection back to the pool.
-	PostFetch func()
+	PostFetch func(ctx context.Context) error
 }
 
 // MustE is a wrapper around the E function. It will panic upon encountering an error.
@@ -594,7 +594,10 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 		}
 
 		if o.PostFetch != nil {
-			o.PostFetch()
+			err := o.PostFetch(ctx)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		if o.ConcreteStruct != nil && len(out) > 0 {
@@ -607,8 +610,11 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 				gmotaFetHsbZRjx := fordefer.NewStack(true)
 				defer gmotaFetHsbZRjx.Unwind()
 				for i := 0; i < count; i++ {
+					if err := ctx.Err(); err != nil {
+						return nil, err
+					}
 					row := reflect.ValueOf(rows.Index(i).Interface())
-					retVals := row.MethodByName("PostUnmarshal").Call([]reflect.Value{reflect.ValueOf(i), reflect.ValueOf(count)})
+					retVals := row.MethodByName("PostUnmarshal").Call([]reflect.Value{reflect.ValueOf(ctx), reflect.ValueOf(i), reflect.ValueOf(count)})
 					err := retVals[0].Interface()
 					if err != nil {
 						return nil, xerrors.Errorf("dbq.PostUnmarshal @ row %d: %w", i, err)
