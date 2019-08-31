@@ -150,11 +150,7 @@ import (
    sql "github.com/rocketlaunchr/mysql-go"
 )
 
-p, _ := stdSql.Open("mysql", "user:password@tcp(localhost:3306)/db")
-kP, _ := stdSql.Open("mysql", "user:password@tcp(localhost:3306)/db")
-kP.SetMaxOpenConns(1)
-
-pool := &sql.DB{p, kP}
+pool, _ := sql.Open("user:password@tcp(localhost:3306)/db")
 
 conn, err := pool.Conn(ctx)
 defer conn.Close()

@@ -118,7 +118,7 @@ func StdTimeConversionConfig(dbtype ...Database) *StructorConfig {
 						return nil, err
 					}
 				}
-				return &civil.DateTime{
+				return civil.DateTime{
 					Date: civil.DateOf(t),
 					Time: civil.TimeOf(t),
 				}, nil
