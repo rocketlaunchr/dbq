@@ -27,6 +27,8 @@ Everyone knows that performing simple **DATABASE queries** in Go takes numerous 
 - [MySQL driver](https://github.com/go-sql-driver/mysql) OR
 - [PostgreSQL driver](https://github.com/lib/pq)
 
+**NOTE:** For mysql driver, `parseTime=true` setting can interfere with unmarshaling to `civil.*` types.
+
 ## Installation
 
 ```
