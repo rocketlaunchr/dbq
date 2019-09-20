@@ -4,6 +4,7 @@
 package dbq
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
