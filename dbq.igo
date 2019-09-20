@@ -75,7 +75,8 @@ type Options struct {
 	ConcreteStruct interface{}
 
 	// DecoderConfig is used to configure the decoder used by the mapstructure
-	// package.
+	// package. If it's not supplied, a default StructorConfig is assumed. This means
+	// WeaklyTypedInput is set to true and no DecodeHook is provided.
 	//
 	// See: https://godoc.org/github.com/mitchellh/mapstructure
 	DecoderConfig *StructorConfig
@@ -547,7 +548,17 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 						return nil, err
 					}
 				} else {
-					err := mapstructure.Decode(vals, res)
+					dc := &mapstructure.DecoderConfig{
+						ZeroFields:       true,
+						TagName:          "dbq",
+						WeaklyTypedInput: true,
+						Result:           res,
+					}
+					decoder, err := mapstructure.NewDecoder(dc)
+					if err != nil {
+						return nil, err
+					}
+					err = decoder.Decode(vals)
 					if err != nil {
 						return nil, err
 					}
