@@ -10,6 +10,8 @@ Everyone knows that performing simple **DATABASE queries** in Go takes numerous 
 
 **WARNING: You will seriously reduce your database code to a few lines**
 
+⭐ the project to show your appreciation.
+
 ## What is included
 
 - Supports ANY type of query
@@ -183,5 +185,3 @@ The license is a modified MIT license. Refer to the `LICENSE` file for more deta
 ### Final Notes
 
 Feel free to enhance features by issuing pull-requests. Note that the project is written in [igo](https://github.com/rocketlaunchr/igo) and transpiled into Go.
-
-**Star** the project to show your appreciation.
