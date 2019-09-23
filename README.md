@@ -10,7 +10,7 @@ Everyone knows that performing simple **DATABASE queries** in Go takes numerous 
 
 **WARNING: You will seriously reduce your database code to a few lines**
 
-⭐ the project to show your appreciation.
+⭐ **the project to show your appreciation.**
 
 ## What is included
 
