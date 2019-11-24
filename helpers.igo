@@ -173,12 +173,6 @@ func Struct(strct interface{}) []interface{} {
 		fieldValRaw := s.Field(i)
 		fieldVal := fieldValRaw.Interface()
 
-		// slices - treat specially
-		if fieldValRaw.Kind() == reflect.Slice {
-			out = append(out, sliceConv(fieldValRaw)...)
-			continue
-		}
-
 		// Ignore maps
 		if fieldValRaw.Kind() == reflect.Map {
 			continue
@@ -186,6 +180,12 @@ func Struct(strct interface{}) []interface{} {
 
 		// Check if json parser would ordinarily hide the value anyway
 		if fieldTag == "-" || (strings.HasSuffix(fieldTag, ",omitempty") && reflect.DeepEqual(fieldVal, reflect.Zero(reflect.TypeOf(fieldVal)).Interface())) {
+			continue
+		}
+
+		// slices - treat specially
+		if fieldValRaw.Kind() == reflect.Slice {
+			out = append(out, sliceConv(fieldValRaw)...)
 			continue
 		}
 

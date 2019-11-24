@@ -174,16 +174,16 @@ func Struct(strct interface{}) []interface{} {
 		fieldValRaw := s.Field(i)
 		fieldVal := fieldValRaw.Interface()
 
-		if fieldValRaw.Kind() == reflect.Slice {
-			out = append(out, sliceConv(fieldValRaw)...)
-			continue
-		}
-
 		if fieldValRaw.Kind() == reflect.Map {
 			continue
 		}
 
 		if fieldTag == "-" || (strings.HasSuffix(fieldTag, ",omitempty") && reflect.DeepEqual(fieldVal, reflect.Zero(reflect.TypeOf(fieldVal)).Interface())) {
+			continue
+		}
+
+		if fieldValRaw.Kind() == reflect.Slice {
+			out = append(out, sliceConv(fieldValRaw)...)
 			continue
 		}
 
