@@ -6,7 +6,7 @@ package dbq
 
 import (
 	"context"
-	stdSql "database/sql"
+	"database/sql"
 	"encoding/json"
 	"golang.org/x/xerrors"
 	"reflect"
@@ -96,7 +96,7 @@ type Options struct {
 
 // MustE is a wrapper around the E function. It will panic upon encountering an error.
 // This can erradicate boiler-plate error handing code.
-func MustE(ctx context.Context, db ExecContexter, query string, options *Options, args ...interface{}) stdSql.Result {
+func MustE(ctx context.Context, db ExecContexter, query string, options *Options, args ...interface{}) sql.Result {
 	Awnwek, rBEmfd := E(ctx, db, query, options, args...)
 	if rBEmfd != nil {
 		panic(rBEmfd)
@@ -106,19 +106,19 @@ func MustE(ctx context.Context, db ExecContexter, query string, options *Options
 
 // E is a wrapper around the Q function. It is used for "Exec" queries such as insert, update and delete.
 // It also returns a sql.Result interface instead of an empty interface.
-func E(ctx context.Context, db ExecContexter, query string, options *Options, args ...interface{}) (stdSql.Result, error) {
+func E(ctx context.Context, db ExecContexter, query string, options *Options, args ...interface{}) (sql.Result, error) {
 
 	res, err := Q(ctx, db, query, options, args...)
 	if err != nil {
 		return nil, err
 	}
 
-	return res.(stdSql.Result), nil
+	return res.(sql.Result), nil
 }
 
 // MustQ is a wrapper around the Q function. It will panic upon encountering an error.
 // This can erradicate boiler-plate error handing code.
-func MustQ(ctx context.Context, db interface{}, query string, options *Options, args ...interface{}) interface{} {
+func MustQ(ctx context.Context, db QueryContexter, query string, options *Options, args ...interface{}) interface{} {
 	zdcEkX, BAkjQZ := Q(ctx, db, query, options, args...)
 	if BAkjQZ != nil {
 		panic(BAkjQZ)

@@ -4,17 +4,17 @@ package dbq
 
 import (
 	"context"
-	stdSql "database/sql"
+	"database/sql"
 )
 
 // ExecContexter is for modifying the database state.
 type ExecContexter interface {
-	ExecContext(ctx context.Context, query string, args ...interface{}) (stdSql.Result, error)
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 }
 
 // QueryContexter is for querying the database.
 type QueryContexter interface {
-	QueryContext(ctx context.Context, query string, args ...interface{}) (*stdSql.Rows, error)
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 }
 
 // SQLBasic allows for querying and executing statements.
