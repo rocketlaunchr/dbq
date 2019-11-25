@@ -142,3 +142,53 @@ func StdTimeConversionConfig(dbtype ...Database) *StructorConfig {
 		},
 	}
 }
+
+// Struct converts the fields of the struct into a slice of values.
+// You can use it to convert a struct into the placeholder arguments required by
+// the Q and E function.
+// The function panics if strct is not an actual struct.
+func Struct(strct interface{}) []interface{} {
+
+	out := []interface{}{}
+
+	if strct == nil {
+		panic(errors.New("strct must be a struct"))
+	}
+
+	s := reflect.ValueOf(strct)
+
+	if s.Kind() == reflect.Ptr {
+		s = reflect.Indirect(s)
+	}
+	typeOfT := s.Type()
+
+	for i := 0; i < s.NumField(); i++ {
+		f := typeOfT.Field(i)
+
+		if f.PkgPath != "" {
+
+			continue
+		}
+
+		fieldTag := f.Tag.Get("dbq")
+		fieldValRaw := s.Field(i)
+		fieldVal := fieldValRaw.Interface()
+
+		if fieldValRaw.Kind() == reflect.Map {
+			continue
+		}
+
+		if fieldTag == "-" || (strings.HasSuffix(fieldTag, ",omitempty") && reflect.DeepEqual(fieldVal, reflect.Zero(reflect.TypeOf(fieldVal)).Interface())) {
+			continue
+		}
+
+		if fieldValRaw.Kind() == reflect.Slice {
+			out = append(out, sliceConv(fieldValRaw)...)
+			continue
+		}
+
+		out = append(out, fieldVal)
+	}
+
+	return out
+}
