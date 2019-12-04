@@ -11,6 +11,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 	"reflect"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -604,19 +605,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 				rows := reflect.ValueOf(out)
 				count := rows.Len()
 
-				if !o.ConcurrentPostUnmarshal {
-					for i := 0; i < count; i++ {
-						if err := ctx.Err(); err != nil {
-							return nil, err
-						}
-						row := reflect.ValueOf(rows.Index(i).Interface())
-						retVals := row.MethodByName("PostUnmarshal").Call([]reflect.Value{reflect.ValueOf(ctx), reflect.ValueOf(i), reflect.ValueOf(count)})
-						err := retVals[0].Interface()
-						if err != nil {
-							return nil, xerrors.Errorf("dbq.PostUnmarshal @ row %d: %w", i, err)
-						}
-					}
-				} else {
+				if o.ConcurrentPostUnmarshal && runtime.GOMAXPROCS(0) > 1 {
 					g, newCtx := errgroup.WithContext(ctx)
 
 					for i := 0; i < count; i++ {
@@ -638,6 +627,18 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 
 					if err := g.Wait(); err != nil {
 						return nil, err
+					}
+				} else {
+					for i := 0; i < count; i++ {
+						if err := ctx.Err(); err != nil {
+							return nil, err
+						}
+						row := reflect.ValueOf(rows.Index(i).Interface())
+						retVals := row.MethodByName("PostUnmarshal").Call([]reflect.Value{reflect.ValueOf(ctx), reflect.ValueOf(i), reflect.ValueOf(count)})
+						err := retVals[0].Interface()
+						if err != nil {
+							return nil, xerrors.Errorf("dbq.PostUnmarshal @ row %d: %w", i, err)
+						}
 					}
 				}
 			}
