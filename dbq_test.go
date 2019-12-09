@@ -222,7 +222,7 @@ func TestMustE(t *testing.T) {
 	}
 }
 
-func TestPostUnmarshallConcurrent(t *testing.T) {
+func TestPostUnmarshalConcurrent(t *testing.T) {
 
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -291,7 +291,7 @@ func TestPostUnmarshallConcurrent(t *testing.T) {
 
 }
 
-func TestPostUnmarshallSequential(t *testing.T) {
+func TestPostUnmarshalSequential(t *testing.T) {
 
 	db, mock, err := sqlmock.New()
 	if err != nil {
