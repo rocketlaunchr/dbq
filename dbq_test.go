@@ -32,6 +32,8 @@ type store struct {
 }
 
 func (s *store) PostUnmarshal(ctx context.Context, row, count int) error {
+	// This postUnmarshall method changes the timezone on DateAdded in Store struct
+	// From UTC to CEST (Europe/Budapest)
 
 	loc, err := time.LoadLocation("Europe/Budapest")
 	if err != nil {
