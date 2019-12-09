@@ -37,7 +37,7 @@ func (s *store) PostUnmarshal(ctx context.Context, row, count int) error {
 
 	loc, err := time.LoadLocation("Europe/Budapest")
 	if err != nil {
-		panic(err)
+		return err
 	}
 	newTimeZone := s.DateAdded.In(loc)
 	s.DateAdded = newTimeZone
@@ -236,8 +236,9 @@ func TestPostUnmarshallConcurrent(t *testing.T) {
 	// convert tRef to new timezone
 	loc, err := time.LoadLocation("Europe/Budapest")
 	if err != nil {
-		panic(err)
+		t.Errorf("an unexpected error occured %s", err)
 	}
+
 	newTref := tRef.In(loc)
 
 	rows := sqlmock.NewRows([]string{"id", "product", "price", "quantity", "available", "date_added"}).
@@ -304,7 +305,7 @@ func TestPostUnmarshallSequential(t *testing.T) {
 	// convert tRef to newtimezone
 	loc, err := time.LoadLocation("Europe/Budapest")
 	if err != nil {
-		panic(err)
+		t.Errorf("an unexpected error occured %s", err)
 	}
 	newTref := tRef.In(loc)
 
