@@ -31,6 +31,18 @@ type store struct {
 	DateAdded time.Time `dbq:"date_added"`
 }
 
+func (s *store) PostUnmarshal(ctx context.Context, row, count int) error {
+
+	loc, err := time.LoadLocation("Europe/Budapest")
+	if err != nil {
+		panic(err)
+	}
+	newTimeZone := s.DateAdded.In(loc)
+	s.DateAdded = newTimeZone
+
+	return nil
+}
+
 func TestMustQ(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -206,4 +218,140 @@ func TestMustE(t *testing.T) {
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
+}
+
+func TestPostUnmarshallConcurrent(t *testing.T) {
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	// tRef := "2006-01-02 15:04:05"
+	tRef := time.Now()
+
+	// convert tRef to new timezone
+	loc, err := time.LoadLocation("Europe/Budapest")
+	if err != nil {
+		panic(err)
+	}
+	newTref := tRef.In(loc)
+
+	rows := sqlmock.NewRows([]string{"id", "product", "price", "quantity", "available", "date_added"}).
+		AddRow(int64(1), "wrist watch", float64(45000.98), int64(6), int64(1), tRef).
+		AddRow(int64(2), "bags", float64(25089.55), int64(10), int64(0), tRef).
+		AddRow(int64(3), "car", float64(598000999.99), int64(3), int64(1), tRef)
+
+	expected := []interface{}{
+		&store{
+			ID:        1,
+			Product:   "wrist watch",
+			Price:     float64(45000.98),
+			Quantity:  int64(6),
+			Available: int64(1),
+			DateAdded: newTref,
+		},
+		&store{
+			ID:        2,
+			Product:   "bags",
+			Price:     float64(25089.55),
+			Quantity:  int64(10),
+			Available: int64(0),
+			DateAdded: newTref,
+		},
+		&store{
+			ID:        3,
+			Product:   "car",
+			Price:     float64(598000999.99),
+			Quantity:  int64(3),
+			Available: int64(1),
+			DateAdded: newTref,
+		},
+	}
+
+	mock.ExpectQuery("^SELECT (.+) FROM store$").WillReturnRows(rows) // Multiple result select query
+
+	ctx := context.Background()
+
+	// Testing Multiple Data select with MustQ
+	opts := &Options{ConcreteStruct: store{}, DecoderConfig: &StructorConfig{
+		DecodeHook:       mapstructure.StringToTimeHookFunc(time.RFC3339),
+		WeaklyTypedInput: true},
+		ConcurrentPostUnmarshal: true}
+
+	actual := MustQ(ctx, db, "SELECT * FROM store", opts)
+
+	if !cmp.Equal(expected, actual) {
+		t.Errorf("wrong val: expected: %T %v actual: %T %v", expected, expected, actual, actual)
+	}
+
+}
+
+func TestPostUnmarshallSequential(t *testing.T) {
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	// tRef := "2006-01-02 15:04:05"
+	tRef := time.Now()
+
+	// convert tRef to newtimezone
+	loc, err := time.LoadLocation("Europe/Budapest")
+	if err != nil {
+		panic(err)
+	}
+	newTref := tRef.In(loc)
+
+	rows := sqlmock.NewRows([]string{"id", "product", "price", "quantity", "available", "date_added"}).
+		AddRow(int64(1), "wrist watch", float64(45000.98), int64(6), int64(1), tRef).
+		AddRow(int64(2), "bags", float64(25089.55), int64(10), int64(0), tRef).
+		AddRow(int64(3), "car", float64(598000999.99), int64(3), int64(1), tRef)
+
+	expected := []interface{}{
+		&store{
+			ID:        1,
+			Product:   "wrist watch",
+			Price:     float64(45000.98),
+			Quantity:  int64(6),
+			Available: int64(1),
+			DateAdded: newTref,
+		},
+		&store{
+			ID:        2,
+			Product:   "bags",
+			Price:     float64(25089.55),
+			Quantity:  int64(10),
+			Available: int64(0),
+			DateAdded: newTref,
+		},
+		&store{
+			ID:        3,
+			Product:   "car",
+			Price:     float64(598000999.99),
+			Quantity:  int64(3),
+			Available: int64(1),
+			DateAdded: newTref,
+		},
+	}
+
+	mock.ExpectQuery("^SELECT (.+) FROM store$").WillReturnRows(rows) // Multiple result select query
+
+	ctx := context.Background()
+
+	// Testing Multiple Data select with MustQ
+	opts := &Options{ConcreteStruct: store{}, DecoderConfig: &StructorConfig{
+		DecodeHook:       mapstructure.StringToTimeHookFunc(time.RFC3339),
+		WeaklyTypedInput: true},
+		ConcurrentPostUnmarshal: false}
+
+	actual := MustQ(ctx, db, "SELECT * FROM store", opts)
+
+	if !cmp.Equal(expected, actual) {
+		t.Errorf("wrong val: expected: %T %v actual: %T %v", expected, expected, actual, actual)
+	}
+
 }
