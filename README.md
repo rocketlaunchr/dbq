@@ -55,10 +55,16 @@ You can insert multiple rows at once.
 
 db, _ := sql.Open("mysql", "user:password@tcp(localhost:3306)/db")
 
+type Row struct {
+  Name      string
+  Age       int
+  CreatedAt time.Time
+}
+
 users := []interface{}{
-  []interface{}{"Brad", 45, time.Now()},
-  []interface{}{"Ange", 36, time.Now()},
-  []interface{}{"Emily", 22, time.Now()},
+  dbq.Struct(Row{"Brad", 45, time.Now()}),
+  dbq.Struct(Row{"Ange", 36, time.Now()}),
+  dbq.Struct(Row{"Emily", 22, time.Now()}),
 }
 
 stmt := dbq.INSERT("users", []string{"name", "age", "created_at"}, len(users))
@@ -141,6 +147,22 @@ if result == nil {
 } else {
   result.(map[string]interface{})
 }
+
+```
+
+### Flatten Query Args
+
+All slices are flattened automatically.
+
+```go
+args1 := []string{"A", "B", "C"}
+args2 := []interface{}{2, "D"}
+args3 := dbq.Struct(Row{"Brad Pitt", 45, time.Now()})
+
+results := dbq.MustQ(ctx, db, stmt, args1, args2, args3)
+
+// Placeholder arguments will get flattened to:
+results := dbq.MustQ(ctx, db, stmt, "A", "B", "C", 2, "D", "Brad Pitt", 45, time.Now())
 
 ```
 
