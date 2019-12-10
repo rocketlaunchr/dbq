@@ -236,7 +236,7 @@ func TestPostUnmarshalConcurrent(t *testing.T) {
 	// convert tRef to new timezone
 	loc, err := time.LoadLocation("Europe/Budapest")
 	if err != nil {
-		t.Errorf("an unexpected error occured %s", err)
+		t.Errorf("an unexpected error occurred %s", err)
 	}
 
 	newTref := tRef.In(loc)
@@ -305,7 +305,7 @@ func TestPostUnmarshalSequential(t *testing.T) {
 	// convert tRef to newtimezone
 	loc, err := time.LoadLocation("Europe/Budapest")
 	if err != nil {
-		t.Errorf("an unexpected error occured %s", err)
+		t.Errorf("an unexpected error occurred %s", err)
 	}
 	newTref := tRef.In(loc)
 
