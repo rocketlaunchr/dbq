@@ -145,9 +145,15 @@ func StdTimeConversionConfig(dbtype ...Database) *StructorConfig {
 
 // Struct converts the fields of the struct into a slice of values.
 // You can use it to convert a struct into the placeholder arguments required by
-// the Q and E function.
+// the Q and E function. tagName is used to indicate the struct tag. It defaults to "dbq".
 // The function panics if strct is not an actual struct.
-func Struct(strct interface{}) []interface{} {
+func Struct(strct interface{}, tagName ...string) []interface{} {
+
+	tg := "dbq"
+
+	if len(tagName) != 0 {
+		tg = tagName[0]
+	}
 
 	out := []interface{}{}
 
@@ -170,7 +176,7 @@ func Struct(strct interface{}) []interface{} {
 			continue
 		}
 
-		fieldTag := f.Tag.Get("dbq")
+		fieldTag := f.Tag.Get(tg)
 		fieldValRaw := s.Field(i)
 		fieldVal := fieldValRaw.Interface()
 

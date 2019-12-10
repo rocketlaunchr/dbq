@@ -6,8 +6,10 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 	"reflect"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -90,6 +92,9 @@ type Options struct {
 	// PostFetch is called after all results are fetched but before PostUnmarshaler is called (if applicable).
 	// It can be used to return a database connection back to the pool.
 	PostFetch func(ctx context.Context) error
+
+	// ConcurrentPostUnmarshal can be set to true if PostUnmarshal must be called concurrently.
+	ConcurrentPostUnmarshal bool
 }
 
 // MustE is a wrapper around the E function. It will panic upon encountering an error.
@@ -125,7 +130,7 @@ func MustQ(ctx context.Context, db QueryContexter, query string, options *Option
 // (of any slice type) can be provided for the first arg. If so, the values will automatically be flattened to a list
 // of interface{}.
 //
-// NOTE: sql.ErrNoRows is never returned as an error: usually, a single item slice is returned, unless the
+// NOTE: sql.ErrNoRows is never returned as an error: usually, a slice is returned, unless the
 // behavior is modified by the SingleResult Option.
 func Q(ctx context.Context, db interface{}, query string, options *Options, args ...interface{}) (out interface{}, rErr error) {
 
@@ -595,15 +600,41 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 			if csTyp.Implements(ics) {
 				rows := reflect.ValueOf(out)
 				count := rows.Len()
-				for i := 0; i < count; i++ {
-					if err := ctx.Err(); err != nil {
+
+				if o.ConcurrentPostUnmarshal && runtime.GOMAXPROCS(0) > 1 {
+					g, newCtx := errgroup.WithContext(ctx)
+
+					for i := 0; i < count; i++ {
+						i := i
+						g.Go(func() error {
+							if err := newCtx.Err(); err != nil {
+								return err
+							}
+
+							row := reflect.ValueOf(rows.Index(i).Interface())
+							retVals := row.MethodByName("PostUnmarshal").Call([]reflect.Value{reflect.ValueOf(newCtx), reflect.ValueOf(i), reflect.ValueOf(count)})
+							err := retVals[0].Interface()
+							if err != nil {
+								return xerrors.Errorf("dbq.PostUnmarshal @ row %d: %w", i, err)
+							}
+							return nil
+						})
+					}
+
+					if err := g.Wait(); err != nil {
 						return nil, err
 					}
-					row := reflect.ValueOf(rows.Index(i).Interface())
-					retVals := row.MethodByName("PostUnmarshal").Call([]reflect.Value{reflect.ValueOf(ctx), reflect.ValueOf(i), reflect.ValueOf(count)})
-					err := retVals[0].Interface()
-					if err != nil {
-						return nil, xerrors.Errorf("dbq.PostUnmarshal @ row %d: %w", i, err)
+				} else {
+					for i := 0; i < count; i++ {
+						if err := ctx.Err(); err != nil {
+							return nil, err
+						}
+						row := reflect.ValueOf(rows.Index(i).Interface())
+						retVals := row.MethodByName("PostUnmarshal").Call([]reflect.Value{reflect.ValueOf(ctx), reflect.ValueOf(i), reflect.ValueOf(count)})
+						err := retVals[0].Interface()
+						if err != nil {
+							return nil, xerrors.Errorf("dbq.PostUnmarshal @ row %d: %w", i, err)
+						}
 					}
 				}
 			}
