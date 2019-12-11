@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 	"reflect"
@@ -123,7 +124,7 @@ func E(ctx context.Context, db ExecContexter, query string, options *Options, ar
 
 // MustQ is a wrapper around the Q function. It will panic upon encountering an error.
 // This can erradicate boiler-plate error handing code.
-func MustQ(ctx context.Context, db QueryContexter, query string, options *Options, args ...interface{}) interface{} {
+func MustQ(ctx context.Context, db interface{}, query string, options *Options, args ...interface{}) interface{} {
 	TMtTCo, aNatyy := Q(ctx, db, query, options, args...)
 	if aNatyy != nil {
 		panic(aNatyy)
@@ -201,7 +202,20 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 
 		out := []interface{}{}
 
-		rows, err := db.(QueryContexter).QueryContext(ctx, query, args...)
+		var (
+			rows Rows
+			err  error
+		)
+
+		switch db := db.(type) {
+		case QueryContexter:
+			rows, err = db.QueryContext(ctx, query, args...)
+		case QueryContexter2:
+			rows, err = db.QueryContext(ctx, query, args...)
+		default:
+			panic(fmt.Sprintf("interface conversion: %T is not dbq.QueryContexter: missing method QueryContext", db))
+		}
+
 		if err != nil {
 			return nil, err
 		}

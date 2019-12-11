@@ -7,6 +7,8 @@ package dbq
 import (
 	"context"
 	"database/sql"
+
+	rlSql "github.com/rocketlaunchr/mysql-go"
 )
 
 // ExecContexter is for modifying the database state.
@@ -19,8 +21,26 @@ type QueryContexter interface {
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 }
 
+// QueryContexter2 is for compatability with the github.com/rocketlaunchr/mysql-go package.
+// It allows for querying MySQL databases with context cancelation. Without the assistance of this external
+// package, the underlying MySQL query is not canceled.
+type QueryContexter2 interface {
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*rlSql.Rows, error)
+}
+
 // SQLBasic allows for querying and executing statements.
 type SQLBasic interface {
 	ExecContexter
 	QueryContexter
+}
+
+// Rows allows for compatability with github.com/rocketlaunchr/mysql-go package.
+type Rows interface {
+	Close() error
+	ColumnTypes() ([]*sql.ColumnType, error)
+	Columns() ([]string, error)
+	Err() error
+	Next() bool
+	NextResultSet() bool
+	Scan(dest ...interface{}) error
 }
