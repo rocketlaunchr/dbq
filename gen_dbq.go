@@ -203,14 +203,14 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 		out := []interface{}{}
 
 		var (
-			rows Rows
+			rows rows
 			err  error
 		)
 
 		switch db := db.(type) {
 		case QueryContexter:
 			rows, err = db.QueryContext(ctx, query, args...)
-		case QueryContexter2:
+		case queryContexter2:
 			rows, err = db.QueryContext(ctx, query, args...)
 		default:
 			panic(fmt.Sprintf("interface conversion: %T is not dbq.QueryContexter: missing method QueryContext", db))

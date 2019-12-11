@@ -21,10 +21,7 @@ type QueryContexter interface {
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 }
 
-// QueryContexter2 is for compatibility with the github.com/rocketlaunchr/mysql-go package.
-// It allows for querying MySQL databases with context cancelation. Without the assistance of this external
-// package, the underlying MySQL query is not canceled.
-type QueryContexter2 interface {
+type queryContexter2 interface {
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*rlSql.Rows, error)
 }
 
@@ -34,8 +31,7 @@ type SQLBasic interface {
 	QueryContexter
 }
 
-// Rows allows for compatibility with github.com/rocketlaunchr/mysql-go package.
-type Rows interface {
+type rows interface {
 	Close() error
 	ColumnTypes() ([]*sql.ColumnType, error)
 	Columns() ([]string, error)
