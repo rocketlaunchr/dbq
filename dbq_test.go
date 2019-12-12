@@ -31,7 +31,16 @@ type store struct {
 	DateAdded time.Time `dbq:"date_added"`
 }
 
-func (s *store) PostUnmarshal(ctx context.Context, row, count int) error {
+type store2 struct {
+	ID        int64     `dbq:"id"`
+	Product   string    `dbq:"product"`
+	Price     float64   `dbq:"price"`
+	Quantity  int64     `dbq:"quantity"`
+	Available int64     `dbq:"available"`
+	DateAdded time.Time `dbq:"date_added"`
+}
+
+func (s *store2) PostUnmarshal(ctx context.Context, row, count int) error {
 	// This postUnmarshall method changes the timezone on DateAdded in Store struct
 	// From UTC to CEST (Europe/Budapest)
 
@@ -247,7 +256,7 @@ func TestPostUnmarshalConcurrent(t *testing.T) {
 		AddRow(int64(3), "car", float64(598000999.99), int64(3), int64(1), tRef)
 
 	expected := []interface{}{
-		&store{
+		&store2{
 			ID:        1,
 			Product:   "wrist watch",
 			Price:     float64(45000.98),
@@ -255,7 +264,7 @@ func TestPostUnmarshalConcurrent(t *testing.T) {
 			Available: int64(1),
 			DateAdded: newTref,
 		},
-		&store{
+		&store2{
 			ID:        2,
 			Product:   "bags",
 			Price:     float64(25089.55),
@@ -263,7 +272,7 @@ func TestPostUnmarshalConcurrent(t *testing.T) {
 			Available: int64(0),
 			DateAdded: newTref,
 		},
-		&store{
+		&store2{
 			ID:        3,
 			Product:   "car",
 			Price:     float64(598000999.99),
@@ -278,7 +287,7 @@ func TestPostUnmarshalConcurrent(t *testing.T) {
 	ctx := context.Background()
 
 	// Testing Multiple Data select with MustQ
-	opts := &Options{ConcreteStruct: store{}, DecoderConfig: &StructorConfig{
+	opts := &Options{ConcreteStruct: store2{}, DecoderConfig: &StructorConfig{
 		DecodeHook:       mapstructure.StringToTimeHookFunc(time.RFC3339),
 		WeaklyTypedInput: true},
 		ConcurrentPostUnmarshal: true}
@@ -315,7 +324,7 @@ func TestPostUnmarshalSequential(t *testing.T) {
 		AddRow(int64(3), "car", float64(598000999.99), int64(3), int64(1), tRef)
 
 	expected := []interface{}{
-		&store{
+		&store2{
 			ID:        1,
 			Product:   "wrist watch",
 			Price:     float64(45000.98),
@@ -323,7 +332,7 @@ func TestPostUnmarshalSequential(t *testing.T) {
 			Available: int64(1),
 			DateAdded: newTref,
 		},
-		&store{
+		&store2{
 			ID:        2,
 			Product:   "bags",
 			Price:     float64(25089.55),
@@ -331,7 +340,7 @@ func TestPostUnmarshalSequential(t *testing.T) {
 			Available: int64(0),
 			DateAdded: newTref,
 		},
-		&store{
+		&store2{
 			ID:        3,
 			Product:   "car",
 			Price:     float64(598000999.99),
@@ -346,7 +355,7 @@ func TestPostUnmarshalSequential(t *testing.T) {
 	ctx := context.Background()
 
 	// Testing Multiple Data select with MustQ
-	opts := &Options{ConcreteStruct: store{}, DecoderConfig: &StructorConfig{
+	opts := &Options{ConcreteStruct: store2{}, DecoderConfig: &StructorConfig{
 		DecodeHook:       mapstructure.StringToTimeHookFunc(time.RFC3339),
 		WeaklyTypedInput: true},
 		ConcurrentPostUnmarshal: false}
@@ -406,10 +415,9 @@ func TestQueryRawResult(t *testing.T) {
 	ctx := context.Background()
 
 	// Testing Multiple Data select with MustQ
-	opts := &Options{ConcreteStruct: store{}, DecoderConfig: &StructorConfig{
-		DecodeHook:       mapstructure.StringToTimeHookFunc(time.RFC3339),
-		WeaklyTypedInput: true},
-		RawResults: true}
+	opts := &Options{
+		RawResults: true,
+	}
 
 	actual := MustQ(ctx, db, "SELECT * FROM store", opts)
 	// spew.Dump(actual)
