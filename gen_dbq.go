@@ -98,6 +98,9 @@ type Options struct {
 
 	// ConcurrentPostUnmarshal can be set to true if PostUnmarshal must be called concurrently.
 	ConcurrentPostUnmarshal bool
+
+	// RawResults can be set to true for results to be returned unprocessed ([]byte).
+	RawResults bool
 }
 
 // MustE is a wrapper around the E function. It will panic upon encountering an error.
@@ -203,14 +206,14 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 		out := []interface{}{}
 
 		var (
-			rows Rows
+			rows rows
 			err  error
 		)
 
 		switch db := db.(type) {
 		case QueryContexter:
 			rows, err = db.QueryContext(ctx, query, args...)
-		case QueryContexter2:
+		case queryContexter2:
 			rows, err = db.QueryContext(ctx, query, args...)
 		default:
 			panic(fmt.Sprintf("interface conversion: %T is not dbq.QueryContexter: missing method QueryContext", db))
@@ -252,13 +255,19 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 			} else {
 				for colID, elem := range rowData {
 
-					colType := cols[colID].DatabaseTypeName()
 					fieldName := cols[colID].Name()
+					raw := elem.(*[]byte)
+
+					if o.RawResults {
+						vals[fieldName] = *raw
+						continue
+					}
+
+					colType := cols[colID].DatabaseTypeName()
 					nullable, hasNullableInfo := cols[colID].Nullable()
 
 					var val *string
 
-					raw := elem.(*[]byte)
 					if !(raw == nil || *raw == nil) {
 						val = &[]string{string(*raw)}[0]
 					}

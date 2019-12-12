@@ -358,3 +358,64 @@ func TestPostUnmarshalSequential(t *testing.T) {
 	}
 
 }
+
+func TestQueryRawResult(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	// tRef := "2006-01-02 15:04:05"
+	tRef := time.Now()
+
+	rows := sqlmock.NewRows([]string{"id", "product", "price", "quantity", "available", "date_added"}).
+		AddRow([]byte("1"), []byte("wrist watch"), []byte("45000.98"), []byte("6"), []byte("1"), tRef).
+		AddRow([]byte("2"), []byte("bags"), []byte("25089.55"), []byte("10"), []byte("0"), tRef).
+		AddRow([]byte("3"), []byte("car"), []byte("598000999.99"), []byte("3"), []byte("1"), tRef)
+
+	// expected := []interface{}{
+	// 	&store{
+	// 		ID:        1,
+	// 		Product:   "wrist watch",
+	// 		Price:     float64(45000.98),
+	// 		Quantity:  int64(6),
+	// 		Available: int64(1),
+	// 		DateAdded: tRef,
+	// 	},
+	// 	&store{
+	// 		ID:        2,
+	// 		Product:   "bags",
+	// 		Price:     float64(25089.55),
+	// 		Quantity:  int64(10),
+	// 		Available: int64(0),
+	// 		DateAdded: tRef,
+	// 	},
+	// 	&store{
+	// 		ID:        3,
+	// 		Product:   "car",
+	// 		Price:     float64(598000999.99),
+	// 		Quantity:  int64(3),
+	// 		Available: int64(1),
+	// 		DateAdded: tRef,
+	// 	},
+	// }
+
+	mock.ExpectQuery("^SELECT (.+) FROM store$").WillReturnRows(rows) // Multiple result select query
+
+	ctx := context.Background()
+
+	// Testing Multiple Data select with MustQ
+	opts := &Options{ConcreteStruct: store{}, DecoderConfig: &StructorConfig{
+		DecodeHook:       mapstructure.StringToTimeHookFunc(time.RFC3339),
+		WeaklyTypedInput: true},
+		RawResults: true}
+
+	actual := MustQ(ctx, db, "SELECT * FROM store", opts)
+	// spew.Dump(actual)
+	_ = actual
+
+	// if !cmp.Equal(expected, actual) {
+	// 	t.Errorf("wrong val: expected: %T %v actual: %T %v", expected, expected, actual, actual)
+	// }
+}
