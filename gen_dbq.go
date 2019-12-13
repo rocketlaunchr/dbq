@@ -100,6 +100,7 @@ type Options struct {
 	ConcurrentPostUnmarshal bool
 
 	// RawResults can be set to true for results to be returned unprocessed ([]byte).
+	// This option does nothing if ConcreteStruct is provided.
 	RawResults bool
 }
 
