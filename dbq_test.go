@@ -368,7 +368,7 @@ func TestPostUnmarshalSequential(t *testing.T) {
 
 }
 
-func TestQueryRawResult(t *testing.T) {
+func TestMultipleQueryRawResult(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -420,6 +420,39 @@ func TestQueryRawResult(t *testing.T) {
 	}
 
 	actual := MustQ(ctx, db, "SELECT * FROM store", opts)
+	// spew.Dump(actual)
+	_ = actual
+
+	// if !cmp.Equal(expected, actual) {
+	// 	t.Errorf("wrong val: expected: %T %v actual: %T %v", expected, expected, actual, actual)
+	// }
+}
+func TestSingleQueryRawResult(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	// tRef := "2006-01-02 15:04:05"
+	tRef := time.Now()
+
+	rows := sqlmock.NewRows([]string{"id", "product", "price", "quantity", "available", "date_added"}).
+		AddRow([]byte("1"), []byte("wrist watch"), []byte("45000.98"), []byte("6"), []byte("1"), tRef).
+		AddRow([]byte("2"), []byte("bags"), []byte("25089.55"), []byte("10"), []byte("0"), tRef).
+		AddRow([]byte("3"), []byte("car"), []byte("598000999.99"), []byte("3"), []byte("1"), tRef)
+
+	mock.ExpectQuery("^SELECT (.+) FROM store LIMIT 1$").WillReturnRows(rows) // Multiple result select query
+
+	ctx := context.Background()
+
+	// Testing Multiple Data select with MustQ
+	opts := &Options{
+		RawResults:   true,
+		SingleResult: true,
+	}
+
+	actual := MustQ(ctx, db, "SELECT * FROM store LIMIT 1", opts)
 	// spew.Dump(actual)
 	_ = actual
 
