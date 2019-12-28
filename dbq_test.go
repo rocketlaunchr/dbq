@@ -375,40 +375,34 @@ func TestMultipleQueryRawResult(t *testing.T) {
 	}
 	defer db.Close()
 
-	// tRef := "2006-01-02 15:04:05"
-	tRef := time.Now()
+	rows := sqlmock.NewRows([]string{"ID", "Product", "Price", "Quantity", "Available"}).
+		AddRow([]byte("1"), []byte("wrist watch"), []byte("45000.98"), []byte("6"), []byte("1")).
+		AddRow([]byte("2"), []byte("bags"), []byte("25089.55"), []byte("10"), []byte("0")).
+		AddRow([]byte("3"), []byte("car"), []byte("598000999.99"), []byte("3"), []byte("1"))
 
-	rows := sqlmock.NewRows([]string{"id", "product", "price", "quantity", "available", "date_added"}).
-		AddRow([]byte("1"), []byte("wrist watch"), []byte("45000.98"), []byte("6"), []byte("1"), tRef).
-		AddRow([]byte("2"), []byte("bags"), []byte("25089.55"), []byte("10"), []byte("0"), tRef).
-		AddRow([]byte("3"), []byte("car"), []byte("598000999.99"), []byte("3"), []byte("1"), tRef)
-
-	// expected := []interface{}{
-	// 	&store{
-	// 		ID:        1,
-	// 		Product:   "wrist watch",
-	// 		Price:     float64(45000.98),
-	// 		Quantity:  int64(6),
-	// 		Available: int64(1),
-	// 		DateAdded: tRef,
-	// 	},
-	// 	&store{
-	// 		ID:        2,
-	// 		Product:   "bags",
-	// 		Price:     float64(25089.55),
-	// 		Quantity:  int64(10),
-	// 		Available: int64(0),
-	// 		DateAdded: tRef,
-	// 	},
-	// 	&store{
-	// 		ID:        3,
-	// 		Product:   "car",
-	// 		Price:     float64(598000999.99),
-	// 		Quantity:  int64(3),
-	// 		Available: int64(1),
-	// 		DateAdded: tRef,
-	// 	},
-	// }
+	expected := []map[string]interface{}{
+		map[string]interface{}{
+			"ID":        []byte("1"),
+			"Product":   []byte("wrist watch"),
+			"Price":     []byte("45000.98"),
+			"Quantity":  []byte("6"),
+			"Available": []byte("1"),
+		},
+		map[string]interface{}{
+			"ID":        []byte("2"),
+			"Product":   []byte("bags"),
+			"Price":     []byte("25089.55"),
+			"Quantity":  []byte("10"),
+			"Available": []byte("0"),
+		},
+		map[string]interface{}{
+			"ID":        []byte("3"),
+			"Product":   []byte("car"),
+			"Price":     []byte("598000999.99"),
+			"Quantity":  []byte("3"),
+			"Available": []byte("1"),
+		},
+	}
 
 	mock.ExpectQuery("^SELECT (.+) FROM store$").WillReturnRows(rows) // Multiple result select query
 
@@ -420,12 +414,10 @@ func TestMultipleQueryRawResult(t *testing.T) {
 	}
 
 	actual := MustQ(ctx, db, "SELECT * FROM store", opts)
-	// spew.Dump(actual)
-	_ = actual
 
-	// if !cmp.Equal(expected, actual) {
-	// 	t.Errorf("wrong val: expected: %T %v actual: %T %v", expected, expected, actual, actual)
-	// }
+	if !cmp.Equal(expected, actual) {
+		t.Errorf("wrong val: expected: %T %v actual: %T %v", expected, expected, actual, actual)
+	}
 }
 func TestSingleQueryRawResult(t *testing.T) {
 	db, mock, err := sqlmock.New()
@@ -434,13 +426,10 @@ func TestSingleQueryRawResult(t *testing.T) {
 	}
 	defer db.Close()
 
-	// tRef := "2006-01-02 15:04:05"
-	tRef := time.Now()
-
-	rows := sqlmock.NewRows([]string{"id", "product", "price", "quantity", "available", "date_added"}).
-		AddRow([]byte("1"), []byte("wrist watch"), []byte("45000.98"), []byte("6"), []byte("1"), tRef).
-		AddRow([]byte("2"), []byte("bags"), []byte("25089.55"), []byte("10"), []byte("0"), tRef).
-		AddRow([]byte("3"), []byte("car"), []byte("598000999.99"), []byte("3"), []byte("1"), tRef)
+	rows := sqlmock.NewRows([]string{"ID", "Product", "Price", "Quantity", "Available"}).
+		AddRow([]byte("1"), []byte("wrist watch"), []byte("45000.98"), []byte("6"), []byte("1")).
+		AddRow([]byte("2"), []byte("bags"), []byte("25089.55"), []byte("10"), []byte("0")).
+		AddRow([]byte("3"), []byte("car"), []byte("598000999.99"), []byte("3"), []byte("1"))
 
 	mock.ExpectQuery("^SELECT (.+) FROM store LIMIT 1$").WillReturnRows(rows) // Multiple result select query
 
@@ -452,11 +441,17 @@ func TestSingleQueryRawResult(t *testing.T) {
 		SingleResult: true,
 	}
 
-	actual := MustQ(ctx, db, "SELECT * FROM store LIMIT 1", opts)
-	// spew.Dump(actual)
-	_ = actual
+	expected := map[string]interface{}{
+		"ID":        []byte("1"),
+		"Product":   []byte("wrist watch"),
+		"Price":     []byte("45000.98"),
+		"Quantity":  []byte("6"),
+		"Available": []byte("1"),
+	}
 
-	// if !cmp.Equal(expected, actual) {
-	// 	t.Errorf("wrong val: expected: %T %v actual: %T %v", expected, expected, actual, actual)
-	// }
+	actual := MustQ(ctx, db, "SELECT * FROM store LIMIT 1", opts)
+
+	if !cmp.Equal(expected, actual) {
+		t.Errorf("wrong val: expected: %T %v actual: %T %v", expected, expected, actual, actual)
+	}
 }
