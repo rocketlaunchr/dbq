@@ -203,52 +203,102 @@ func Struct(strct interface{}, tagName ...string) []interface{} {
 	return out
 }
 
-func parseUint(s string) *uint {
+func parseUintP(s string) *uint {
 	n, _ := strconv.ParseUint(s, 10, 0)
 	return &[]uint{uint(n)}[0]
 }
 
-func parseUint8(s string) *uint8 {
+func parseUint8P(s string) *uint8 {
 	n, _ := strconv.ParseUint(s, 10, 8)
 	return &[]uint8{uint8(n)}[0]
 }
 
-func parseUint16(s string) *uint16 {
+func parseUint16P(s string) *uint16 {
 	n, _ := strconv.ParseUint(s, 10, 16)
 	return &[]uint16{uint16(n)}[0]
 }
 
-func parseUint32(s string) *uint32 {
+func parseUint32P(s string) *uint32 {
 	n, _ := strconv.ParseUint(s, 10, 32)
 	return &[]uint32{uint32(n)}[0]
 }
 
-func parseUint64(s string) *uint64 {
+func parseUint64P(s string) *uint64 {
 	n, _ := strconv.ParseUint(s, 10, 64)
 	return &[]uint64{uint64(n)}[0]
 }
 
-func parseInt(s string) *int {
+func parseIntP(s string) *int {
 	n, _ := strconv.ParseInt(s, 10, 0)
 	return &[]int{int(n)}[0]
 }
 
-func parseInt8(s string) *int8 {
+func parseInt8P(s string) *int8 {
 	n, _ := strconv.ParseInt(s, 10, 8)
 	return &[]int8{int8(n)}[0]
 }
 
-func parseInt16(s string) *int16 {
+func parseInt16P(s string) *int16 {
 	n, _ := strconv.ParseInt(s, 10, 16)
 	return &[]int16{int16(n)}[0]
 }
 
-func parseInt32(s string) *int32 {
+func parseInt32P(s string) *int32 {
 	n, _ := strconv.ParseInt(s, 10, 32)
 	return &[]int32{int32(n)}[0]
 }
 
-func parseInt64(s string) *int64 {
+func parseInt64P(s string) *int64 {
 	n, _ := strconv.ParseInt(s, 10, 64)
 	return &[]int64{int64(n)}[0]
+}
+
+func parseUint(s string) uint {
+	n, _ := strconv.ParseUint(s, 10, 0)
+	return uint(n)
+}
+
+func parseUint8(s string) uint8 {
+	n, _ := strconv.ParseUint(s, 10, 8)
+	return uint8(n)
+}
+
+func parseUint16(s string) uint16 {
+	n, _ := strconv.ParseUint(s, 10, 16)
+	return uint16(n)
+}
+
+func parseUint32(s string) uint32 {
+	n, _ := strconv.ParseUint(s, 10, 32)
+	return uint32(n)
+}
+
+func parseUint64(s string) uint64 {
+	n, _ := strconv.ParseUint(s, 10, 64)
+	return n
+}
+
+func parseInt(s string) int {
+	n, _ := strconv.ParseInt(s, 10, 0)
+	return int(n)
+}
+
+func parseInt8(s string) int8 {
+	n, _ := strconv.ParseInt(s, 10, 8)
+	return int8(n)
+}
+
+func parseInt16(s string) int16 {
+	n, _ := strconv.ParseInt(s, 10, 16)
+	return int16(n)
+}
+
+func parseInt32(s string) int32 {
+	n, _ := strconv.ParseInt(s, 10, 32)
+	return int32(n)
+}
+
+func parseInt64(s string) int64 {
+	n, _ := strconv.ParseInt(s, 10, 64)
+	return n
 }

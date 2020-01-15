@@ -316,7 +316,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*uint)(nil)
 							} else {
-								vals[fieldName] = parseUint(*val)
+								vals[fieldName] = parseUintP(*val)
 							}
 						} else {
 							if hasNullableInfo {
@@ -329,7 +329,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*uint8)(nil)
 							} else {
-								vals[fieldName] = parseUint8(*val)
+								vals[fieldName] = parseUint8P(*val)
 							}
 						} else {
 							if hasNullableInfo {
@@ -342,7 +342,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*uint16)(nil)
 							} else {
-								vals[fieldName] = parseUint16(*val)
+								vals[fieldName] = parseUint16P(*val)
 							}
 						} else {
 							if hasNullableInfo {
@@ -355,7 +355,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*uint32)(nil)
 							} else {
-								vals[fieldName] = parseUint32(*val)
+								vals[fieldName] = parseUint32P(*val)
 							}
 						} else {
 							if hasNullableInfo {
@@ -368,7 +368,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*uint64)(nil)
 							} else {
-								vals[fieldName] = parseUint64(*val)
+								vals[fieldName] = parseUint64P(*val)
 							}
 						} else {
 							if hasNullableInfo {
@@ -381,7 +381,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*int)(nil)
 							} else {
-								vals[fieldName] = parseInt(*val)
+								vals[fieldName] = parseIntP(*val)
 							}
 						} else {
 							if hasNullableInfo {
@@ -394,7 +394,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*int8)(nil)
 							} else {
-								vals[fieldName] = parseInt8(*val)
+								vals[fieldName] = parseInt8P(*val)
 							}
 						} else {
 							if hasNullableInfo {
@@ -407,7 +407,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*int16)(nil)
 							} else {
-								vals[fieldName] = parseInt16(*val)
+								vals[fieldName] = parseInt16P(*val)
 							}
 						} else {
 							if hasNullableInfo {
@@ -420,7 +420,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*int32)(nil)
 							} else {
-								vals[fieldName] = parseInt32(*val)
+								vals[fieldName] = parseInt32P(*val)
 							}
 						} else {
 							if hasNullableInfo {
@@ -433,7 +433,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*int64)(nil)
 							} else {
-								vals[fieldName] = parseInt64(*val)
+								vals[fieldName] = parseInt64P(*val)
 							}
 						} else {
 							if hasNullableInfo {
@@ -446,7 +446,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*int64)(nil)
 							} else {
-								vals[fieldName] = parseInt64(*val)
+								vals[fieldName] = parseInt64P(*val)
 							}
 						} else {
 							if hasNullableInfo {
