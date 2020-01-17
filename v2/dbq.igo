@@ -1,0 +1,670 @@
+// Copyright 2019-20 PJ Engineering and Business Solutions Pty. Ltd. All rights reserved.
+
+package dbq
+
+import (
+	"context"
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"golang.org/x/sync/errgroup"
+	"golang.org/x/xerrors"
+	"reflect"
+	"runtime"
+	"strconv"
+	"strings"
+	"time"
+
+	"cloud.google.com/go/civil"
+	"github.com/mitchellh/mapstructure"
+)
+
+// StructorConfig is used to expose a subset of the configuration options
+// provided by the mapstructure package.
+//
+// See: https://godoc.org/github.com/mitchellh/mapstructure#DecoderConfig
+type StructorConfig struct {
+
+	// DecodeHook, if set, will be called before any decoding and any
+	// type conversion (if WeaklyTypedInput is on). This lets you modify
+	// the values before they're set down onto the resulting struct.
+	//
+	// If an error is returned, the entire decode will fail with that
+	// error.
+	DecodeHook mapstructure.DecodeHookFunc
+
+	// If WeaklyTypedInput is true, the decoder will make the following
+	// "weak" conversions:
+	//
+	//   - bools to string (true = "1", false = "0")
+	//   - numbers to string (base 10)
+	//   - bools to int/uint (true = 1, false = 0)
+	//   - strings to int/uint (base implied by prefix)
+	//   - int to bool (true if value != 0)
+	//   - string to bool (accepts: 1, t, T, TRUE, true, True, 0, f, F,
+	//     FALSE, false, False. Anything else is an error)
+	//   - empty array = empty map and vice versa
+	//   - negative numbers to overflowed uint values (base 10)
+	//   - slice of maps to a merged map
+	//   - single values are converted to slices if required. Each
+	//     element is weakly decoded. For example: "4" can become []int{4}
+	//     if the target type is an int slice.
+	//
+	WeaklyTypedInput bool
+}
+
+// PostUnmarshaler allows you to further modify all results after unmarshaling.
+// The ConcreteStruct pointer must implement this interface to make use of this feature.
+type PostUnmarshaler interface {
+
+	// PostUnmarshal is called for each row after all results have been fetched.
+	// You can use it to further modify the values of each ConcreteStruct.
+	PostUnmarshal(ctx context.Context, row, count int) error
+}
+
+// SingleResult is a convenient option for the common case of expecting
+// a single result from a query.
+var SingleResult = &Options{SingleResult: true}
+
+// Options is used to modify the default behavior.
+type Options struct {
+
+	// ConcreteStruct can be set to any concrete struct (not a pointer).
+	// When set, the mapstructure package is used to convert the returned
+	// results automatically from a map to a struct. The `dbq` struct tag
+	// can be used to map column names to the struct's fields.
+	//
+	// See: https://godoc.org/github.com/mitchellh/mapstructure
+	ConcreteStruct interface{}
+
+	// DecoderConfig is used to configure the decoder used by the mapstructure
+	// package. If it's not supplied, a default StructorConfig is assumed. This means
+	// WeaklyTypedInput is set to true and no DecodeHook is provided.
+	//
+	// See: https://godoc.org/github.com/mitchellh/mapstructure
+	DecoderConfig *StructorConfig
+
+	// SingleResult can be set to true if you know the query will return at most 1 result.
+	// When true, a nil is returned if no result is found. Alternatively, it will return the
+	// single result directly (instead of wrapped in a slice). This makes it easier to
+	// type assert.
+	SingleResult bool
+
+	// PostFetch is called after all results are fetched but before PostUnmarshaler is called (if applicable).
+	// It can be used to return a database connection back to the pool.
+	PostFetch func(ctx context.Context) error
+
+	// ConcurrentPostUnmarshal can be set to true if PostUnmarshal must be called concurrently.
+	ConcurrentPostUnmarshal bool
+
+	// RawResults can be set to true for results to be returned unprocessed ([]byte).
+	// This option does nothing if ConcreteStruct is provided.
+	RawResults bool
+}
+
+// MustE is a wrapper around the E function. It will panic upon encountering an error.
+// This can erradicate boiler-plate error handing code.
+func MustE(ctx context.Context, db ExecContexter, query string, options *Options, args ...interface{}) sql.Result {
+	return must(E(ctx, db, query, options, args...))
+}
+
+// E is a wrapper around the Q function. It is used for "Exec" queries such as insert, update and delete.
+// It also returns a sql.Result interface instead of an empty interface.
+func E(ctx context.Context, db ExecContexter, query string, options *Options, args ...interface{}) (sql.Result, error) {
+
+	res, err := Q(ctx, db, query, options, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.(sql.Result), nil
+}
+
+// MustQ is a wrapper around the Q function. It will panic upon encountering an error.
+// This can erradicate boiler-plate error handing code.
+func MustQ(ctx context.Context, db interface{}, query string, options *Options, args ...interface{}) interface{} {
+	return must(Q(ctx, db, query, options, args...))
+}
+
+// Q is a convenience function that is used for inserting, updating, deleting, and querying a SQL database.
+// For inserts, updates, and deletes, a sql.Result is returned.
+// For queries, a []map[string]interface{} is ordinarily returned. Each result (an item in the slice) contains
+// a map where the keys are the columns, and the values are the data for the column.
+// When a ConcreteStruct is provided via the Options, the mapstructure package is used to automatically
+// return []structs instead. args is a list of values to replace the placeholders in the query. A single slice
+// (of any slice type) can be provided for the first arg. If so, the values will automatically be flattened to a list
+// of interface{}.
+//
+// NOTE: sql.ErrNoRows is never returned as an error: usually, a slice is returned, unless the
+// behavior is modified by the SingleResult Option.
+func Q(ctx context.Context, db interface{}, query string, options *Options, args ...interface{}) (out interface{}, rErr error) {
+
+	var (
+		o        Options
+		wasQuery bool
+	)
+
+	if options != nil {
+		o = *options
+	}
+
+	defer func() {
+		if rErr == nil {
+			if wasQuery && o.SingleResult {
+				rows := reflect.ValueOf(out)
+				if rows.Len() == 0 {
+					out = nil
+				} else {
+					row := rows.Index(0)
+					out = row.Interface()
+				}
+			}
+		}
+	}()
+
+	query = strings.TrimSpace(query)
+	if strings.HasPrefix(query, "(") && strings.HasSuffix(query, ")") {
+		query = strings.TrimPrefix(query, "(")
+		query = strings.TrimSuffix(query, ")")
+	}
+	queryType := query[0:6]
+
+	// Check if any arguments are slices
+	foundSliceArg := false
+	for _, v := range args {
+		if arg := reflect.ValueOf(v); arg.Kind() == reflect.Slice {
+			foundSliceArg = true
+			break
+		}
+	}
+
+	if foundSliceArg {
+		newArgs := []interface{}{}
+		for _, v := range args {
+			if arg := reflect.ValueOf(v); arg.Kind() == reflect.Slice {
+				newArgs = append(newArgs, sliceConv(arg)...)
+			} else {
+				newArgs = append(newArgs, v)
+			}
+		}
+		args = newArgs
+	}
+
+	if queryType == "INSERT" || queryType == "insert" {
+		return db.(ExecContexter).ExecContext(ctx, query, args...)
+	} else if queryType == "UPDATE" || queryType == "update" {
+		return db.(ExecContexter).ExecContext(ctx, query, args...)
+	} else if queryType == "DELETE" || queryType == "delete" {
+		return db.(ExecContexter).ExecContext(ctx, query, args...)
+	}
+
+	wasQuery = true // Assume Query
+
+	var (
+		outStruct interface{}
+		outMap    = []map[string]interface{}{}
+	)
+
+	if o.ConcreteStruct != nil {
+		typ := reflect.SliceOf(reflect.PtrTo(reflect.TypeOf(o.ConcreteStruct)))
+		outStruct = reflect.MakeSlice(typ, 0, 0)
+	}
+
+	var (
+		rows rows
+		err  error
+	)
+
+	switch db := db.(type) {
+	case QueryContexter:
+		rows, err = db.QueryContext(ctx, query, args...)
+	case queryContexter2:
+		rows, err = db.QueryContext(ctx, query, args...)
+	default:
+		panic(fmt.Sprintf("interface conversion: %T is not dbq.QueryContexter: missing method QueryContext", db))
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	cols, err := rows.ColumnTypes()
+	if err != nil {
+		return nil, err
+	}
+	totalColumns := len(cols)
+
+	for rows.Next() {
+
+		rowData := make([]interface{}, totalColumns)
+		for i := range rowData {
+			rowData[i] = &[]byte{}
+		}
+
+		if err := rows.Scan(rowData...); err != nil {
+			return nil, err
+		}
+
+		vals := map[string]interface{}{}
+		if o.ConcreteStruct != nil {
+			for colID, elem := range rowData {
+				fieldName := cols[colID].Name()
+				raw := elem.(*[]byte)
+				if raw == nil || *raw == nil {
+					vals[fieldName] = nil
+				} else {
+					vals[fieldName] = string(*raw)
+				}
+			}
+		} else {
+			for colID, elem := range rowData {
+
+				fieldName := cols[colID].Name()
+				raw := elem.(*[]byte)
+
+				if o.RawResults {
+					vals[fieldName] = *raw
+					continue
+				}
+
+				colType := cols[colID].DatabaseTypeName()
+				nullable, hasNullableInfo := cols[colID].Nullable()
+
+				var val *string
+
+				if !(raw == nil || *raw == nil) {
+					val = &[]string{string(*raw)}[0]
+				}
+
+				switch colType {
+				case "NULL":
+					vals[fieldName] = nil
+				case "CHAR", "VARCHAR", "TEXT", "NVARCHAR", "MEDIUMTEXT", "LONGTEXT":
+					if nullable || !hasNullableInfo {
+						vals[fieldName] = val
+					} else {
+						if hasNullableInfo {
+							// not null
+							vals[fieldName] = *val
+						}
+					}
+				case "FLOAT", "DOUBLE", "DECIMAL", "NUMERIC", "FLOAT4", "FLOAT8":
+					if nullable || !hasNullableInfo {
+						if val == nil {
+							vals[fieldName] = (*float64)(nil)
+						} else {
+							f, _ := strconv.ParseFloat(*val, 64)
+							vals[fieldName] = &f
+						}
+					} else {
+						if hasNullableInfo {
+							// not null
+							f, _ := strconv.ParseFloat(*val, 64)
+							vals[fieldName] = f
+						}
+					}
+				case "INT", "TINYINT", "INT2", "INT4", "INT8", "MEDIUMINT", "SMALLINT", "BIGINT":
+
+					switch cols[colID].ScanType().Kind() {
+					case reflect.Uint:
+						if nullable || !hasNullableInfo {
+							if val == nil {
+								vals[fieldName] = (*uint)(nil)
+							} else {
+								vals[fieldName] = parseUintP(*val)
+							}
+						} else {
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = parseUint(*val)
+							}
+						}
+					case reflect.Uint8:
+						if nullable || !hasNullableInfo {
+							if val == nil {
+								vals[fieldName] = (*uint8)(nil)
+							} else {
+								vals[fieldName] = parseUint8P(*val)
+							}
+						} else {
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = parseUint8(*val)
+							}
+						}
+					case reflect.Uint16:
+						if nullable || !hasNullableInfo {
+							if val == nil {
+								vals[fieldName] = (*uint16)(nil)
+							} else {
+								vals[fieldName] = parseUint16P(*val)
+							}
+						} else {
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = parseUint16(*val)
+							}
+						}
+					case reflect.Uint32:
+						if nullable || !hasNullableInfo {
+							if val == nil {
+								vals[fieldName] = (*uint32)(nil)
+							} else {
+								vals[fieldName] = parseUint32P(*val)
+							}
+						} else {
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = parseUint32(*val)
+							}
+						}
+					case reflect.Uint64:
+						if nullable || !hasNullableInfo {
+							if val == nil {
+								vals[fieldName] = (*uint64)(nil)
+							} else {
+								vals[fieldName] = parseUint64P(*val)
+							}
+						} else {
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = parseUint64(*val)
+							}
+						}
+					case reflect.Int:
+						if nullable || !hasNullableInfo {
+							if val == nil {
+								vals[fieldName] = (*int)(nil)
+							} else {
+								vals[fieldName] = parseIntP(*val)
+							}
+						} else {
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = parseInt(*val)
+							}
+						}
+					case reflect.Int8:
+						if nullable || !hasNullableInfo {
+							if val == nil {
+								vals[fieldName] = (*int8)(nil)
+							} else {
+								vals[fieldName] = parseInt8P(*val)
+							}
+						} else {
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = parseInt8(*val)
+							}
+						}
+					case reflect.Int16:
+						if nullable || !hasNullableInfo {
+							if val == nil {
+								vals[fieldName] = (*int16)(nil)
+							} else {
+								vals[fieldName] = parseInt16P(*val)
+							}
+						} else {
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = parseInt16(*val)
+							}
+						}
+					case reflect.Int32:
+						if nullable || !hasNullableInfo {
+							if val == nil {
+								vals[fieldName] = (*int32)(nil)
+							} else {
+								vals[fieldName] = parseInt32P(*val)
+							}
+						} else {
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = parseInt32(*val)
+							}
+						}
+					case reflect.Int64:
+						if nullable || !hasNullableInfo {
+							if val == nil {
+								vals[fieldName] = (*int64)(nil)
+							} else {
+								vals[fieldName] = parseInt64P(*val)
+							}
+						} else {
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = parseInt64(*val)
+							}
+						}
+					default:
+						if nullable || !hasNullableInfo {
+							if val == nil {
+								vals[fieldName] = (*int64)(nil)
+							} else {
+								vals[fieldName] = parseInt64P(*val)
+							}
+						} else {
+							if hasNullableInfo {
+								// not null
+								vals[fieldName] = parseInt64(*val)
+							}
+						}
+					}
+				case "BOOL":
+					if nullable || !hasNullableInfo {
+						if val == nil {
+							vals[fieldName] = (*bool)(nil)
+						} else {
+							if *val == "true" || *val == "TRUE" || *val == "1" {
+								vals[fieldName] = &[]bool{true}[0]
+							} else {
+								vals[fieldName] = &[]bool{false}[0]
+							}
+						}
+					} else {
+						if hasNullableInfo {
+							// not null
+							if *val == "true" || *val == "TRUE" || *val == "1" {
+								vals[fieldName] = true
+							} else {
+								vals[fieldName] = false
+							}
+						}
+					}
+				case "DATETIME", "TIMESTAMP", "TIMESTAMPTZ":
+					if nullable || !hasNullableInfo {
+						if val == nil {
+							vals[fieldName] = (*time.Time)(nil)
+						} else {
+							t, err := time.Parse("2006-01-02 15:04:05", *val) // MySQL
+							if err != nil {
+								t, _ = time.Parse(time.RFC3339, *val) // PostgreSQL
+							}
+							vals[fieldName] = &t
+						}
+					} else {
+						if hasNullableInfo {
+							// not null
+							t, err := time.Parse("2006-01-02 15:04:05", *val) // MySQL
+							if err != nil {
+								t, _ = time.Parse(time.RFC3339, *val) // PostgreSQL
+							}
+							vals[fieldName] = &t
+						}
+					}
+				case "JSON", "JSONB":
+					if val == nil {
+						vals[fieldName] = nil
+					} else {
+						var jData interface{}
+						json.Unmarshal(*raw, &jData)
+						vals[fieldName] = jData
+					}
+				case "DATE":
+					if nullable || !hasNullableInfo {
+						if val == nil {
+							vals[fieldName] = (*civil.Date)(nil)
+						} else {
+							d, err := civil.ParseDate(*val) // MySQL
+							if err != nil {
+								t, _ := time.Parse(time.RFC3339, *val) // PostgreSQL
+								d = civil.Date{Year: t.Year(), Month: t.Month(), Day: t.Day()}
+							}
+							vals[fieldName] = &d
+						}
+					} else {
+						if hasNullableInfo {
+							// not null
+							d, err := civil.ParseDate(*val) // MySQL
+							if err != nil {
+								t, _ := time.Parse(time.RFC3339, *val) // PostgreSQL
+								d = civil.Date{Year: t.Year(), Month: t.Month(), Day: t.Day()}
+							}
+							vals[fieldName] = d
+						}
+					}
+				case "TIME":
+					if nullable || !hasNullableInfo {
+						if val == nil {
+							vals[fieldName] = (*civil.Time)(nil)
+						} else {
+							t, _ := civil.ParseTime(*val)
+							vals[fieldName] = &t
+						}
+					} else {
+						if hasNullableInfo {
+							// not null
+							t, _ := civil.ParseTime(*val)
+							vals[fieldName] = t
+						}
+					}
+
+				// TODO: More data types
+				// https://github.com/go-sql-driver/mysql/blob/master/fields.go
+				// https://github.com/lib/pq/blob/master/oid/types.go
+				default:
+					// Assume string
+					if nullable || !hasNullableInfo {
+						vals[fieldName] = val
+					} else {
+						if hasNullableInfo {
+							// not null
+							vals[fieldName] = *val
+						}
+					}
+				}
+			}
+		}
+
+		if o.ConcreteStruct != nil {
+			res := reflect.New(reflect.TypeOf(o.ConcreteStruct)).Interface()
+			if o.DecoderConfig != nil {
+				dc := &mapstructure.DecoderConfig{
+					DecodeHook:       o.DecoderConfig.DecodeHook,
+					ZeroFields:       true,
+					TagName:          "dbq",
+					WeaklyTypedInput: o.DecoderConfig.WeaklyTypedInput,
+					Result:           res,
+				}
+				decoder, err := mapstructure.NewDecoder(dc)
+				if err != nil {
+					return nil, err
+				}
+				err = decoder.Decode(vals)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				dc := &mapstructure.DecoderConfig{
+					ZeroFields:       true,
+					TagName:          "dbq",
+					WeaklyTypedInput: true,
+					Result:           res,
+				}
+				decoder, err := mapstructure.NewDecoder(dc)
+				if err != nil {
+					return nil, err
+				}
+				err = decoder.Decode(vals)
+				if err != nil {
+					return nil, err
+				}
+			}
+			outStruct = reflect.Append(outStruct.(reflect.Value), reflect.ValueOf(res))
+		} else {
+			outMap = append(outMap, vals)
+		}
+
+	}
+
+	err = rows.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Call PostFetch
+	if o.PostFetch != nil {
+		err := o.PostFetch(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Call PostUnmarshaler
+	if o.ConcreteStruct != nil {
+		rows := outStruct.(reflect.Value)
+		count := rows.Len()
+		if count > 0 {
+			csTyp := reflect.TypeOf(reflect.New(reflect.TypeOf(o.ConcreteStruct)).Interface())
+			ics := reflect.TypeOf((*PostUnmarshaler)(nil)).Elem()
+
+			if csTyp.Implements(ics) {
+
+				if o.ConcurrentPostUnmarshal && runtime.GOMAXPROCS(0) > 1 {
+					g, newCtx := errgroup.WithContext(ctx)
+
+					for i := 0; i < count; i++ {
+						i := i
+						g.Go(func() error {
+							if err := newCtx.Err(); err != nil {
+								return err
+							}
+
+							row := reflect.ValueOf(rows.Index(i).Interface())
+							retVals := row.MethodByName("PostUnmarshal").Call([]reflect.Value{reflect.ValueOf(newCtx), reflect.ValueOf(i), reflect.ValueOf(count)})
+							err := retVals[0].Interface()
+							if err != nil {
+								return xerrors.Errorf("dbq.PostUnmarshal @ row %d: %w", i, err)
+							}
+							return nil
+						})
+					}
+
+					if err := g.Wait(); err != nil {
+						return nil, err
+					}
+				} else {
+					for i := 0; i < count; i++ {
+						if err := ctx.Err(); err != nil {
+							return nil, err
+						}
+						row := reflect.ValueOf(rows.Index(i).Interface())
+						retVals := row.MethodByName("PostUnmarshal").Call([]reflect.Value{reflect.ValueOf(ctx), reflect.ValueOf(i), reflect.ValueOf(count)})
+						err := retVals[0].Interface()
+						if err != nil {
+							return nil, xerrors.Errorf("dbq.PostUnmarshal @ row %d: %w", i, err)
+						}
+					}
+				}
+			}
+		}
+		return outStruct.(reflect.Value).Interface(), nil
+	}
+
+	return outMap, nil
+}
