@@ -173,6 +173,10 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 	}()
 
 	query = strings.TrimSpace(query)
+	if strings.HasPrefix(query, "(") && strings.HasSuffix(query, ")") {
+		query = strings.TrimPrefix(query, "(")
+		query = strings.TrimSuffix(query, ")")
+	}
 	queryType := query[0:6]
 
 	foundSliceArg := false
@@ -306,32 +310,18 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 					}
 				case "INT", "TINYINT", "INT2", "INT4", "INT8", "MEDIUMINT", "SMALLINT", "BIGINT":
 
-					var (
-						i64 *int64
-						u64 *uint64
-					)
-
-					if val != nil {
-						if n, err := strconv.ParseInt(*val, 10, 64); err == nil {
-							i64 = &n
-						}
-						if u, err := strconv.ParseUint(*val, 10, 64); err == nil {
-							u64 = &u
-						}
-					}
-
 					switch cols[colID].ScanType().Kind() {
 					case reflect.Uint:
 						if nullable || !hasNullableInfo {
 							if val == nil {
 								vals[fieldName] = (*uint)(nil)
 							} else {
-								vals[fieldName] = &[]uint{uint(*u64)}[0]
+								vals[fieldName] = parseUintP(*val)
 							}
 						} else {
 							if hasNullableInfo {
 
-								vals[fieldName] = uint(*u64)
+								vals[fieldName] = parseUint(*val)
 							}
 						}
 					case reflect.Uint8:
@@ -339,12 +329,12 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*uint8)(nil)
 							} else {
-								vals[fieldName] = &[]uint8{uint8(*u64)}[0]
+								vals[fieldName] = parseUint8P(*val)
 							}
 						} else {
 							if hasNullableInfo {
 
-								vals[fieldName] = uint8(*u64)
+								vals[fieldName] = parseUint8(*val)
 							}
 						}
 					case reflect.Uint16:
@@ -352,12 +342,12 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*uint16)(nil)
 							} else {
-								vals[fieldName] = &[]uint16{uint16(*u64)}[0]
+								vals[fieldName] = parseUint16P(*val)
 							}
 						} else {
 							if hasNullableInfo {
 
-								vals[fieldName] = uint16(*u64)
+								vals[fieldName] = parseUint16(*val)
 							}
 						}
 					case reflect.Uint32:
@@ -365,12 +355,12 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*uint32)(nil)
 							} else {
-								vals[fieldName] = &[]uint32{uint32(*u64)}[0]
+								vals[fieldName] = parseUint32P(*val)
 							}
 						} else {
 							if hasNullableInfo {
 
-								vals[fieldName] = uint32(*u64)
+								vals[fieldName] = parseUint32(*val)
 							}
 						}
 					case reflect.Uint64:
@@ -378,12 +368,12 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*uint64)(nil)
 							} else {
-								vals[fieldName] = &[]uint64{*u64}[0]
+								vals[fieldName] = parseUint64P(*val)
 							}
 						} else {
 							if hasNullableInfo {
 
-								vals[fieldName] = *u64
+								vals[fieldName] = parseUint64(*val)
 							}
 						}
 					case reflect.Int:
@@ -391,12 +381,12 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*int)(nil)
 							} else {
-								vals[fieldName] = &[]int{int(*i64)}[0]
+								vals[fieldName] = parseIntP(*val)
 							}
 						} else {
 							if hasNullableInfo {
 
-								vals[fieldName] = int(*i64)
+								vals[fieldName] = parseInt(*val)
 							}
 						}
 					case reflect.Int8:
@@ -404,12 +394,12 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*int8)(nil)
 							} else {
-								vals[fieldName] = &[]int8{int8(*i64)}[0]
+								vals[fieldName] = parseInt8P(*val)
 							}
 						} else {
 							if hasNullableInfo {
 
-								vals[fieldName] = int8(*i64)
+								vals[fieldName] = parseInt8(*val)
 							}
 						}
 					case reflect.Int16:
@@ -417,12 +407,12 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*int16)(nil)
 							} else {
-								vals[fieldName] = &[]int16{int16(*i64)}[0]
+								vals[fieldName] = parseInt16P(*val)
 							}
 						} else {
 							if hasNullableInfo {
 
-								vals[fieldName] = int16(*i64)
+								vals[fieldName] = parseInt16(*val)
 							}
 						}
 					case reflect.Int32:
@@ -430,12 +420,12 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*int32)(nil)
 							} else {
-								vals[fieldName] = &[]int32{int32(*i64)}[0]
+								vals[fieldName] = parseInt32P(*val)
 							}
 						} else {
 							if hasNullableInfo {
 
-								vals[fieldName] = int32(*i64)
+								vals[fieldName] = parseInt32(*val)
 							}
 						}
 					case reflect.Int64:
@@ -443,12 +433,12 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*int64)(nil)
 							} else {
-								vals[fieldName] = &[]int64{*i64}[0]
+								vals[fieldName] = parseInt64P(*val)
 							}
 						} else {
 							if hasNullableInfo {
 
-								vals[fieldName] = *i64
+								vals[fieldName] = parseInt64(*val)
 							}
 						}
 					default:
@@ -456,12 +446,12 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 							if val == nil {
 								vals[fieldName] = (*int64)(nil)
 							} else {
-								vals[fieldName] = &[]int64{*i64}[0]
+								vals[fieldName] = parseInt64P(*val)
 							}
 						} else {
 							if hasNullableInfo {
 
-								vals[fieldName] = *i64
+								vals[fieldName] = parseInt64(*val)
 							}
 						}
 					}
