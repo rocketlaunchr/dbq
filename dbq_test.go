@@ -381,21 +381,21 @@ func TestMultipleQueryRawResult(t *testing.T) {
 		AddRow([]byte("3"), []byte("car"), []byte("598000999.99"), []byte("3"), []byte("1"))
 
 	expected := []map[string]interface{}{
-		map[string]interface{}{
+		{
 			"ID":        []byte("1"),
 			"Product":   []byte("wrist watch"),
 			"Price":     []byte("45000.98"),
 			"Quantity":  []byte("6"),
 			"Available": []byte("1"),
 		},
-		map[string]interface{}{
+		{
 			"ID":        []byte("2"),
 			"Product":   []byte("bags"),
 			"Price":     []byte("25089.55"),
 			"Quantity":  []byte("10"),
 			"Available": []byte("0"),
 		},
-		map[string]interface{}{
+		{
 			"ID":        []byte("3"),
 			"Product":   []byte("car"),
 			"Price":     []byte("598000999.99"),
