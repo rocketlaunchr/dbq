@@ -96,7 +96,7 @@ results, err := dbq.Q(ctx, db, "SELECT * FROM users", opts)
 Results:
 
 ```groovy
-([]interface {}) (len=6 cap=8) {
+([]*main.user) (len=6 cap=8) {
  (*main.user)(0xc00009e1c0)({
   ID: (int) 1,
   Name: (string) (len=5) "Sally",
