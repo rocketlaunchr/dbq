@@ -190,8 +190,7 @@ if result == nil {
 
 ## Difference between v1 and v2
 
-When a `ConcreteStruct` is provided, in `v1`, the `Q` and `MustQ` function return `[]interface{}` while in `v2` they return `[]*struct`.
-
+When a `ConcreteStruct` is provided, in `v1`, the `Q` and `MustQ` functions return `[]interface{}` while in `v2` they return `[]*struct`.
 
 ## Other useful packages
 
