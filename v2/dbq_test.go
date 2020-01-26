@@ -70,7 +70,7 @@ func TestMustQ(t *testing.T) {
 		AddRow(int64(3), "car", float64(598000999.99), int64(3), int64(1), tRef)
 
 	expected := []*store{
-		&store{
+		{
 			ID:        1,
 			Product:   "wrist watch",
 			Price:     float64(45000.98),
@@ -78,7 +78,7 @@ func TestMustQ(t *testing.T) {
 			Available: int64(1),
 			DateAdded: tRef,
 		},
-		&store{
+		{
 			ID:        2,
 			Product:   "bags",
 			Price:     float64(25089.55),
@@ -86,7 +86,7 @@ func TestMustQ(t *testing.T) {
 			Available: int64(0),
 			DateAdded: tRef,
 		},
-		&store{
+		{
 			ID:        3,
 			Product:   "car",
 			Price:     float64(598000999.99),
@@ -256,7 +256,7 @@ func TestPostUnmarshalConcurrent(t *testing.T) {
 		AddRow(int64(3), "car", float64(598000999.99), int64(3), int64(1), tRef)
 
 	expected := []*store2{
-		&store2{
+		{
 			ID:        1,
 			Product:   "wrist watch",
 			Price:     float64(45000.98),
@@ -264,7 +264,7 @@ func TestPostUnmarshalConcurrent(t *testing.T) {
 			Available: int64(1),
 			DateAdded: newTref,
 		},
-		&store2{
+		{
 			ID:        2,
 			Product:   "bags",
 			Price:     float64(25089.55),
@@ -272,7 +272,7 @@ func TestPostUnmarshalConcurrent(t *testing.T) {
 			Available: int64(0),
 			DateAdded: newTref,
 		},
-		&store2{
+		{
 			ID:        3,
 			Product:   "car",
 			Price:     float64(598000999.99),
@@ -324,7 +324,7 @@ func TestPostUnmarshalSequential(t *testing.T) {
 		AddRow(int64(3), "car", float64(598000999.99), int64(3), int64(1), tRef)
 
 	expected := []*store2{
-		&store2{
+		{
 			ID:        1,
 			Product:   "wrist watch",
 			Price:     float64(45000.98),
@@ -332,7 +332,7 @@ func TestPostUnmarshalSequential(t *testing.T) {
 			Available: int64(1),
 			DateAdded: newTref,
 		},
-		&store2{
+		{
 			ID:        2,
 			Product:   "bags",
 			Price:     float64(25089.55),
@@ -340,7 +340,7 @@ func TestPostUnmarshalSequential(t *testing.T) {
 			Available: int64(0),
 			DateAdded: newTref,
 		},
-		&store2{
+		{
 			ID:        3,
 			Product:   "car",
 			Price:     float64(598000999.99),
