@@ -96,7 +96,7 @@ results, err := dbq.Q(ctx, db, "SELECT * FROM users", opts)
 Results:
 
 ```groovy
-([]interface {}) (len=6 cap=8) {
+([]*main.user) (len=6 cap=8) {
  (*main.user)(0xc00009e1c0)({
   ID: (int) 1,
   Name: (string) (len=5) "Sally",
@@ -187,10 +187,6 @@ if result == nil {
   result.(map[string]interface{})
 }
 ```
-
-## Difference between v1 and v2
-
-When a `ConcreteStruct` is provided, in `v1`, the `Q` and `MustQ` functions return `[]interface{}` while in `v2` they return `[]*struct`.
 
 ## Other useful packages
 

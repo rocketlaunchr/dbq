@@ -1,0 +1,40 @@
+// Copyright 2019-20 PJ Engineering and Business Solutions Pty. Ltd. All rights reserved.
+
+package dbq
+
+import (
+	"context"
+	"database/sql"
+
+	rlSql "github.com/rocketlaunchr/mysql-go"
+)
+
+// ExecContexter is for modifying the database state.
+type ExecContexter interface {
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+}
+
+// QueryContexter is for querying the database.
+type QueryContexter interface {
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+}
+
+type queryContexter2 interface {
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*rlSql.Rows, error)
+}
+
+// SQLBasic allows for querying and executing statements.
+type SQLBasic interface {
+	ExecContexter
+	QueryContexter
+}
+
+type rows interface {
+	Close() error
+	ColumnTypes() ([]*sql.ColumnType, error)
+	Columns() ([]string, error)
+	Err() error
+	Next() bool
+	NextResultSet() bool
+	Scan(dest ...interface{}) error
+}
