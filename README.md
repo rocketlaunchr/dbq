@@ -34,7 +34,7 @@ Everyone knows that performing simple **DATABASE queries** in Go takes numerous 
 ## Installation
 
 ```
-go get -u github.com/rocketlaunchr/dbq
+go get -u github.com/rocketlaunchr/dbq/v2
 ```
 
 ## Examples
@@ -187,6 +187,11 @@ if result == nil {
   result.(map[string]interface{})
 }
 ```
+
+## Difference between v1 and v2
+
+When a `ConcreteStruct` is provided, in `v1`, the `Q` and `MustQ` function return `[]interface{}` while in `v2` they return `[]*struct`.
+
 
 ## Other useful packages
 
