@@ -1,4 +1,4 @@
-# dbq - Barbeque the boilerplate code [![GoDoc](http://godoc.org/github.com/rocketlaunchr/dbq?status.svg)](http://godoc.org/github.com/rocketlaunchr/dbq) [![Go Report Card](https://goreportcard.com/badge/github.com/rocketlaunchr/dbq)](https://goreportcard.com/report/github.com/rocketlaunchr/dbq)
+# dbq - Barbeque the boilerplate code [![GoDoc](http://godoc.org/github.com/rocketlaunchr/dbq?status.svg)](https://pkg.go.dev/github.com/rocketlaunchr/dbq/v2) [![Go Report Card](https://goreportcard.com/badge/github.com/rocketlaunchr/dbq)](https://goreportcard.com/report/github.com/rocketlaunchr/dbq)
 
 <p align="center">
 <img src="https://github.com/rocketlaunchr/dbq/raw/master/logo.png" alt="dbq" />
@@ -178,9 +178,15 @@ import (
 pool, _ := sql.Open("user:password@tcp(localhost:3306)/db")
 
 conn, err := pool.Conn(ctx)
-defer conn.Close()
 
-result := dbq.MustQ(ctx, conn, "SELECT * FROM users LIMIT 1", dbq.SingleResult)
+opts := &dbq.Options{
+  SingleResult:x true,
+  PostFetch: func(ctx context.Context) error {
+    conn.Close()
+  },
+}
+
+result := dbq.MustQ(ctx, conn, "SELECT * FROM users LIMIT 1", opts)
 if result == nil {
   // no result
 } else {
