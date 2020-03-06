@@ -198,7 +198,7 @@ if result == nil {
 
 After fetching the results, you can further modify the results by implementing the `PostUnmarshaler` interface.
 
-```
+```go
 type user struct {
   ID        int       `dbq:"id"`
   Name      string    `dbq:"name"`
