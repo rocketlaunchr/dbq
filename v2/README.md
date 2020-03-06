@@ -194,6 +194,25 @@ if result == nil {
 }
 ```
 
+### PostUnmarshaler
+
+After fetching the results, you can further modify the results by implementing the `PostUnmarshaler` interface.
+
+```
+type user struct {
+  ID        int       `dbq:"id"`
+  Name      string    `dbq:"name"`
+  Age       int       `dbq:"age"`
+  CreatedAt time.Time `dbq:"created_at"`
+  HashedID  string    `dbq:"-"`          // Obfuscate ID
+}
+
+func (u *user) PostUnmarshal(ctx context.Context, row, count int) error {
+  u.HashedID = obfuscate(u.ID)
+  return nil
+}
+```
+
 ## Other useful packages
 
 - [dataframe-go](https://github.com/rocketlaunchr/dataframe-go) - Statistics and data manipulation
