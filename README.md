@@ -180,9 +180,9 @@ pool, _ := sql.Open("user:password@tcp(localhost:3306)/db")
 conn, err := pool.Conn(ctx)
 
 opts := &dbq.Options{
-  SingleResult:x true,
+  SingleResult: true,
   PostFetch: func(ctx context.Context) error {
-    conn.Close()
+    return conn.Close()
   },
 }
 

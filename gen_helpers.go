@@ -38,6 +38,15 @@ func INSERT(tableName string, columns []string, rows int, dbtype ...Database) st
 // For PostgreSQL, you can use incr to increment the placeholder starting count.
 //
 // NOTE: The function panics if either columnsN or rows is 0.
+//
+// Example:
+//
+//  dbq.Ph(3, 1, 0)
+//  // Output: ( ?,?,? )
+//
+//  dbq.Ph(3, 2, 0)
+//  // Output: ( ?,?,? ),( ?,?,? )
+//
 func Ph(columnsN, rows int, incr int, dbtype ...Database) string {
 
 	var typ Database
