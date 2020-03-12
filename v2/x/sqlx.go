@@ -109,8 +109,19 @@ func BulkUpdate(ctx context.Context, db dbq.ExecContexter, updateData map[interf
 					v = val[j]
 				}
 
+				var colType string = "TEXT"
+				switch typ := v.(type) {
+				case int:
+					colType = "INT"
+					_ = typ
+				case string:
+					colType = "TEXT"
+				case float64:
+					colType = "FLOAT"
+				}
+
 				if dbtype == dbq.PostgreSQL {
-					eachSet = eachSet + fmt.Sprintf("WHEN %v = $%d THEN $%d\n", primaryKeyColumn, phIdx+1, phIdx+2)
+					eachSet = eachSet + fmt.Sprintf("WHEN %v = $%d THEN $%d::%s\n", primaryKeyColumn, phIdx+1, phIdx+2, colType)
 					phIdx += 2
 				} else {
 					eachSet = eachSet + fmt.Sprintf("WHEN %v = ? THEN ?\n", primaryKeyColumn)
