@@ -31,12 +31,12 @@ type BulkUpdateOptions struct {
 	DBType *dbq.Database
 }
 
-// BulkUpdatex is used to bulk update multiple columns in a table.
+// BulkUpdate is used to bulk update multiple columns in a table.
 // updateData's key must be the primary key in the table, and it's value is a slice of update values. The update value can be null.
 // WARNING: updateData's value (which is a slice) must have the same length as columns.
 //
 // See: http://blog.bubble.ro/how-to-make-multiple-updates-using-a-single-query-in-mysql/
-func BulkUpdatex(ctx context.Context, db dbq.ExecContexter, updateData map[interface{}][]interface{}, opts BulkUpdateOptions) (sql.Result, error) {
+func BulkUpdate(ctx context.Context, db dbq.ExecContexter, updateData map[interface{}][]interface{}, opts BulkUpdateOptions) (sql.Result, error) {
 
 	var (
 		tableName        string
