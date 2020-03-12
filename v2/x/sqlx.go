@@ -12,12 +12,37 @@ import (
 	"github.com/rocketlaunchr/dbq/v2"
 )
 
-// BulkUpdateColumns is used to bulk update multiple columns in a table.
+type res struct{}
+
+func (*res) LastInsertId() (int64, error) {
+	return 0, nil
+}
+
+func (*res) RowsAffected() (int64, error) {
+	return 0, nil
+}
+
+type BulkUpdateOptions struct {
+	Table      string
+	Columns    []string
+	PrimaryKey string
+	StmtSuffix string
+}
+
+func BulkUpdatex(ctx context.Context, db dbq.ExecContexter, updateData map[string][]interface{}, opts BulkUpdateOptions) (sql.Result, error) {
+
+	if len(updateData) == 0 {
+		return &res{}, nil
+	}
+
+}
+
+// BulkUpdate is used to bulk update multiple columns in a table.
 // updateData's key must be the primary key in the table, and it's value is a slice of update values. The update value can be null.
 // WARNING: updateData's value (which is a slice) must have the same length as columns.
 //
 // See: http://blog.bubble.ro/how-to-make-multiple-updates-using-a-single-query-in-mysql/
-func BulkUpdateColumns(ctx context.Context, db dbq.ExecContexter, dbtype dbq.Database, tableName string, columns []string, updateData map[string][]interface{}, primaryKeyColumn string, extra ...string) (sql.Result, error) {
+func BulkUpdate(ctx context.Context, db dbq.ExecContexter, dbtype dbq.Database, tableName string, columns []string, updateData map[string][]interface{}, primaryKeyColumn string, extra ...string) (sql.Result, error) {
 
 	if db == nil || tableName == "" || len(columns) == 0 {
 		return nil, errors.New("table is empty or no columns specified")
