@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/rocketlaunchr/dbq/v2"
 )
@@ -97,7 +98,10 @@ func BulkUpdate(ctx context.Context, db dbq.ExecContexter, updateData map[interf
 
 				queryArgs = append(queryArgs, primaryKey)
 			} else {
-				var v interface{}
+				var (
+					v       interface{}
+					colType string
+				)
 
 				if reflect.ValueOf(val[j]).Kind() == reflect.Ptr {
 					if reflect.ValueOf(val[j]).IsNil() {
@@ -109,15 +113,22 @@ func BulkUpdate(ctx context.Context, db dbq.ExecContexter, updateData map[interf
 					v = val[j]
 				}
 
-				var colType string = "TEXT"
-				switch typ := v.(type) {
-				case int:
-					colType = "INT"
-					_ = typ
-				case string:
-					colType = "TEXT"
-				case float64:
-					colType = "FLOAT"
+				if v != nil {
+					switch typ := v.(type) {
+					case int, *int:
+						colType = "INT"
+						_ = typ
+					case string, *string:
+						colType = "VARCHAR"
+					case float64, *float64:
+						colType = "NUMERIC"
+					case bool, *bool:
+						colType = "BOOLEAN"
+					case time.Time, *time.Time:
+						colType = "TIMESTAMP"
+					default:
+						colType = "TEXT"
+					}
 				}
 
 				if dbtype == dbq.PostgreSQL {
