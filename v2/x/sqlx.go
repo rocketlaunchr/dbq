@@ -29,7 +29,7 @@ type BulkUpdateOptions struct {
 	StmtSuffix string
 }
 
-func BulkUpdatex(ctx context.Context, db dbq.ExecContexter, updateData map[string][]interface{}, opts BulkUpdateOptions) (sql.Result, error) {
+func BulkUpdatex(ctx context.Context, db dbq.ExecContexter, updateData map[interface{}][]interface{}, opts BulkUpdateOptions) (sql.Result, error) {
 
 	if len(updateData) == 0 {
 		return &res{}, nil
