@@ -196,7 +196,7 @@ if result == nil {
 
 ### PostUnmarshaler
 
-After fetching the results, you can further modify the results by implementing the `PostUnmarshaler` interface. The `PostUnmarshal` must be attached to the pointer of the struct.
+After fetching the results, you can further modify the results by implementing the `PostUnmarshaler` interface. The `PostUnmarshal` function must be attached to the pointer of the struct.
 
 ```go
 type user struct {
