@@ -61,8 +61,8 @@ type BulkUpdateOptions struct {
 //  }
 //
 //  updateData := map[interface{}][]interface{}{
-//     1: []interface{}{"rabbit", 99},
-//     2: []interface{}{"bobby", 909},
+//     1: []interface{}{"rabbit", 5},
+//     2: []interface{}{"cat", 8},
 //  }
 //
 //  x.BulkUpdate(ctx, db, updateData, opts)
