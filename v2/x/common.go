@@ -60,14 +60,14 @@ type BulkUpdateOptions struct {
 //     PrimaryKey: "id",
 //  }
 //
-//  updateData := map[interface{}][]interface{}{
+//  updateData := map[interface{}]interface{}{
 //     1: []interface{}{"rabbit", 5},
 //     2: []interface{}{"cat", 8},
 //  }
 //
 //  x.BulkUpdate(ctx, db, updateData, opts)
 //
-func BulkUpdate(ctx context.Context, db dbq.ExecContexter, updateData map[interface{}][]interface{}, opts BulkUpdateOptions) (sql.Result, error) {
+func BulkUpdate(ctx context.Context, db dbq.ExecContexter, updateData map[interface{}]interface{}, opts BulkUpdateOptions) (sql.Result, error) {
 
 	if opts.Table == "" || len(opts.Columns) == 0 {
 		return nil, errors.New("no table name or column name(s) provided")
@@ -100,7 +100,15 @@ func BulkUpdate(ctx context.Context, db dbq.ExecContexter, updateData map[interf
 				primaryKeys = append(primaryKeys, primaryKey)
 			}
 
-			if val[j] == nil {
+			slice := reflect.ValueOf(val)
+			if len(opts.Columns) != slice.Len() {
+				return nil, errors.New("updateData's value must be a slice with the same length as opts.Columns")
+			}
+
+			valJVal := slice.Index(j)
+			valJ := valJVal.Interface()
+
+			if valJ == nil {
 				if opts.DBType == dbq.PostgreSQL {
 					eachSet = eachSet + fmt.Sprintf("\tWHEN %v = $%d THEN NULL\n", opts.PrimaryKey, phIdx+1)
 					phIdx++
@@ -113,14 +121,14 @@ func BulkUpdate(ctx context.Context, db dbq.ExecContexter, updateData map[interf
 
 				var v interface{}
 
-				if reflect.ValueOf(val[j]).Kind() == reflect.Ptr {
-					if reflect.ValueOf(val[j]).IsNil() {
+				if valJVal.Kind() == reflect.Ptr {
+					if valJVal.IsNil() {
 						v = nil
 					} else {
-						v = reflect.ValueOf(val[j]).Elem().Interface()
+						v = valJVal.Elem().Interface()
 					}
 				} else {
-					v = val[j]
+					v = valJ
 				}
 
 				if opts.DBType == dbq.PostgreSQL {

@@ -196,7 +196,7 @@ if result == nil {
 
 ### PostUnmarshaler
 
-After fetching the results, you can further modify the results by implementing the `PostUnmarshaler` interface.
+After fetching the results, you can further modify the results by implementing the `PostUnmarshaler` interface. The `PostUnmarshal` must be attached to the pointer of the struct.
 
 ```go
 type user struct {
@@ -212,6 +212,10 @@ func (u *user) PostUnmarshal(ctx context.Context, row, count int) error {
   return nil
 }
 ```
+
+## Custom Queries
+
+The `v2/x` subpackage will house functions to perform custom SQL queries. If you believe that a particular query is common or useful, submit a PR. They can be general to both MySQL and PostgreSQL or specific to either.
 
 ## Difference between v1 and v2
 
