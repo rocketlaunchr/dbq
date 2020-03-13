@@ -149,13 +149,13 @@ func BulkUpdate(ctx context.Context, db dbq.ExecContexter, updateData map[interf
 						case bool, *bool:
 							colType = "BOOLEAN"
 						case civil.Date, *civil.Date:
-							// FIX UP
+							colType = "DATE"
 						case civil.DateTime, *civil.DateTime:
-							// FIX UP
-						case civil.Time, *civil.Time:
-							// FIX UP
-						case time.Time, *time.Time:
 							colType = "TIMESTAMP"
+						case civil.Time, *civil.Time:
+							colType = "TIME"
+						case time.Time, *time.Time:
+							colType = "TIMESTAMPTZ"
 						default:
 							colType = "TEXT"
 						}
@@ -182,8 +182,6 @@ func BulkUpdate(ctx context.Context, db dbq.ExecContexter, updateData map[interf
 	if opts.StmtSuffix != "" {
 		stmt = stmt + " " + opts.StmtSuffix
 	}
-
-	fmt.Println(stmt)
 
 	queryArgs = append(queryArgs, primaryKeys...)
 
