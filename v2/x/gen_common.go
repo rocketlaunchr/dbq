@@ -52,7 +52,7 @@ type BulkUpdateOptions struct {
 // updateData's value is a slice containing the new values for each column. A nil value for a column is acceptable.
 // The slice must be the same length as the number of columns being updated.
 //
-// NOTE: You should perform benchmarks to determine if using a transactions and multiple single-row updates is more efficient for your use-case.
+// NOTE: You should perform benchmarks to determine if using a transaction and multiple single-row updates is more efficient for your use-case.
 //
 // Example:
 //
