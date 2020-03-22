@@ -171,9 +171,7 @@ results := dbq.MustQ(ctx, db, stmt, "A", "B", "C", 2, "D", "Brad Pitt", 45, time
 To properly cancel a MySQL query, you need to use the [mysql-go](https://github.com/rocketlaunchr/mysql-go) package. `dbq` plays nicely with it.
 
 ```go
-import (
-   sql "github.com/rocketlaunchr/mysql-go"
-)
+import sql "github.com/rocketlaunchr/mysql-go"
 
 pool, _ := sql.Open("user:password@tcp(localhost:3306)/db")
 
