@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/civil"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -102,6 +103,16 @@ type Options struct {
 	// RawResults can be set to true for results to be returned unprocessed ([]byte).
 	// This option does nothing if ConcreteStruct is provided.
 	RawResults bool
+
+	// RetryPolicy can be set if you want to retry the query in the event of failure.
+	//
+	// Example:
+	//
+	//  import "github.com/cenkalti/backoff/v4"
+	//
+	//  backoff.WithMaxRetries(backoff.NewExponentialBackOff(), 3)
+	//
+	RetryPolicy backoff.BackOff
 }
 
 // MustE is a wrapper around the E function. It will panic upon encountering an error.
@@ -156,6 +167,10 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 
 	if options != nil {
 		o = *options
+
+		if o.RetryPolicy != nil {
+			o.RetryPolicy = backoff.WithContext(o.RetryPolicy, ctx)
+		}
 	}
 
 	defer func() {
@@ -199,12 +214,33 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 		args = newArgs
 	}
 
-	if queryType == "INSERT" || queryType == "insert" {
-		return db.(ExecContexter).ExecContext(ctx, query, args...)
-	} else if queryType == "UPDATE" || queryType == "update" {
-		return db.(ExecContexter).ExecContext(ctx, query, args...)
-	} else if queryType == "DELETE" || queryType == "delete" {
-		return db.(ExecContexter).ExecContext(ctx, query, args...)
+	if queryType == "INSERT" || queryType == "insert" ||
+		queryType == "UPDATE" || queryType == "update" ||
+		queryType == "DELETE" || queryType == "delete" {
+
+		if o.RetryPolicy == nil {
+			return db.(ExecContexter).ExecContext(ctx, query, args...)
+		}
+
+		var (
+			err error
+			res sql.Result
+		)
+
+		operation := func() error {
+			res, err = db.(ExecContexter).ExecContext(ctx, query, args...)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+
+		err = backoff.Retry(operation, o.RetryPolicy)
+		if err != nil {
+			return nil, err
+		}
+
+		return res, nil
 	}
 
 	wasQuery = true
@@ -220,17 +256,43 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 	}
 
 	var (
-		rows rows
-		err  error
+		rows      rows
+		err       error
+		operation func() error
 	)
 
-	switch db := db.(type) {
-	case QueryContexter:
-		rows, err = db.QueryContext(ctx, query, args...)
-	case queryContexter2:
-		rows, err = db.QueryContext(ctx, query, args...)
-	default:
-		panic(fmt.Sprintf("interface conversion: %T is not dbq.QueryContexter: missing method QueryContext", db))
+	if o.RetryPolicy == nil {
+		switch db := db.(type) {
+		case QueryContexter:
+			rows, err = db.QueryContext(ctx, query, args...)
+		case queryContexter2:
+			rows, err = db.QueryContext(ctx, query, args...)
+		default:
+			panic(fmt.Sprintf("interface conversion: %T is not dbq.QueryContexter: missing method QueryContext", db))
+		}
+	} else {
+		switch db := db.(type) {
+		case QueryContexter:
+			operation = func() error {
+				rows, err = db.QueryContext(ctx, query, args...)
+				if err != nil {
+					return err
+				}
+				return nil
+			}
+		case queryContexter2:
+			operation = func() error {
+				rows, err = db.QueryContext(ctx, query, args...)
+				if err != nil {
+					return err
+				}
+				return nil
+			}
+		default:
+			panic(fmt.Sprintf("interface conversion: %T is not dbq.QueryContexter: missing method QueryContext", db))
+		}
+
+		err = backoff.Retry(operation, o.RetryPolicy)
 	}
 
 	if err != nil {
