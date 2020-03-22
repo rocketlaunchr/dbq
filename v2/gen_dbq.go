@@ -18,8 +18,9 @@ import (
 	"time"
 
 	"cloud.google.com/go/civil"
-	"github.com/cenkalti/backoff/v4"
+	// "github.com/cenkalti/backoff/v4"
 	"github.com/mitchellh/mapstructure"
+	"gopkg.in/cenkalti/backoff.v4"
 )
 
 // StructorConfig is used to expose a subset of the configuration options
@@ -268,7 +269,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 		case queryContexter2:
 			rows, err = db.QueryContext(ctx, query, args...)
 		default:
-			panic(fmt.Sprintf("interface conversion: %T is not dbq.QueryContexter: missing method QueryContext", db))
+			panic(fmt.Sprintf("interface conversion: %T is not dbq.QueryContexter: missing method: QueryContext", db))
 		}
 	} else {
 		switch db := db.(type) {
@@ -289,7 +290,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 				return nil
 			}
 		default:
-			panic(fmt.Sprintf("interface conversion: %T is not dbq.QueryContexter: missing method QueryContext", db))
+			panic(fmt.Sprintf("interface conversion: %T is not dbq.QueryContexter: missing method: QueryContext", db))
 		}
 
 		err = backoff.Retry(operation, o.RetryPolicy)
