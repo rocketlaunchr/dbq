@@ -216,7 +216,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 	case queryContexter2:
 		rows, err = db.QueryContext(ctx, query, args...)
 	default:
-		panic(fmt.Sprintf("interface conversion: %T is not dbq.QueryContexter: missing method QueryContext", db))
+		panic(fmt.Sprintf("interface conversion: %T is not dbq.QueryContexter: missing method: QueryContext", db))
 	}
 
 	if err != nil {

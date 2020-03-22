@@ -31,6 +31,21 @@ type SQLBasic interface {
 	QueryContexter
 }
 
+// Txer represents a transaction.
+type Txer interface {
+	Commit() error
+	Rollback() error
+}
+
+// BeginTxer is an object than can begin a transaction.
+type BeginTxer interface {
+	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
+}
+
+type beginTxer2 interface {
+	BeginTx(ctx context.Context, opts *sql.TxOptions) (*rlSql.Tx, error)
+}
+
 type rows interface {
 	Close() error
 	ColumnTypes() ([]*sql.ColumnType, error)
