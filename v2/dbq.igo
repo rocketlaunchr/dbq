@@ -107,9 +107,7 @@ type Options struct {
 	//
 	// Example:
 	//
-	//  import "github.com/cenkalti/backoff/v4"
-	//
-	//  backoff.WithMaxRetries(backoff.NewExponentialBackOff(), 3)
+	//  dbq.ExponentialRetryPolicy(60 * time.Second, 3)
 	//
 	RetryPolicy backoff.BackOff
 }

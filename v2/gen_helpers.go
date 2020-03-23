@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"cloud.google.com/go/civil"
+	// "github.com/cenkalti/backoff/v4"
+	"gopkg.in/cenkalti/backoff.v4"
 )
 
 // Database is used to set the Database.
@@ -96,6 +98,35 @@ func sliceConv(arg reflect.Value) []interface{} {
 	}
 
 	return out
+}
+
+// ExponentialRetryPolicy is a retry policy with exponentially increasing intervals between
+// each retry attempt. If maxElapsedTime is 0, it will retry forever unless restricted by retryAttempts.
+//
+// See: https://godoc.org/github.com/cenkalti/backoff#ExponentialBackOff
+func ExponentialRetryPolicy(maxElapsedTime time.Duration, retryAttempts ...uint64) backoff.BackOff {
+	bo := backoff.NewExponentialBackOff()
+	bo.MaxElapsedTime = maxElapsedTime
+
+	if len(retryAttempts) > 0 && retryAttempts[0] != 0 {
+		return backoff.WithMaxRetries(bo, retryAttempts[0])
+	}
+
+	return bo
+}
+
+// ConstantDelayRetryPolicy is a retry policy with constant intervals between
+// each retry attempt. It will retry forever unless restricted by retryAttempts.
+//
+// See: https://godoc.org/github.com/cenkalti/backoff#ConstantBackOff
+func ConstantDelayRetryPolicy(interval time.Duration, retryAttempts ...uint64) backoff.BackOff {
+	bo := backoff.NewConstantBackOff(interval)
+
+	if len(retryAttempts) > 0 && retryAttempts[0] != 0 {
+		return backoff.WithMaxRetries(bo, retryAttempts[0])
+	}
+
+	return bo
 }
 
 // StdTimeConversionConfig provides a standard configuration for unmarshaling to
