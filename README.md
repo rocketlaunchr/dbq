@@ -23,6 +23,8 @@ Everyone knows that performing simple **DATABASE queries** in Go takes numerous 
 - Automatically unmarshal query results directly to a struct using [mapstructure](https://github.com/mitchellh/mapstructure) package
 - Lightweight
 - Compatible with [mysql-go](https://github.com/rocketlaunchr/mysql-go) for proper MySQL query cancelation
+- Automatically retry query with exponential backoff if operation fails
+- Transaction management (automatic rollback)
 
 ## Dependencies
 
@@ -209,6 +211,38 @@ func (u *user) PostUnmarshal(ctx context.Context, row, count int) error {
   u.HashedID = obfuscate(u.ID)
   return nil
 }
+```
+
+### Retry with Exponential Backoff
+
+If the database operation fails, you can automatically retry with exponentially increasing intervals between each retry attempt. You can also set the maximum number of retries.
+
+```go
+import "github.com/cenkalti/backoff/v4"
+
+opts := &dbq.Options{
+  RetryPolicy:  dbq.ExponentialRetryPolicy(60 * time.Second, 3),
+}
+```
+
+### Transaction Management
+
+You can conveniently perform numerous complex database operations within a transaction without having to worry about rolling back. Unless you explicitly commit, it will automatically rollback.
+
+You have access to the `Q` and `E` function as well as the original `tx` for performance purposes.
+
+```go
+ctx := context.Background()
+pool, _ := sql.Open("mysql", "user:password@tcp(localhost:3306)/db")
+
+dbq.Tx(ctx, pool, func(tx interface{}, Q dbq.QFn, E dbq.EFn, txCommit dbq.TxCommit) {
+  stmt := dbq.INSERT("table", []string{"name", "age", "created_at"}, 1)
+  res, err := E(ctx, stmt, nil, "test name", 34, time.Now())
+  if err != nil {
+    return // Automatic rollback
+  }
+  txCommit()
+})
 ```
 
 ## Custom Queries
