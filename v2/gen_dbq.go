@@ -119,11 +119,11 @@ type Options struct {
 // MustE is a wrapper around the E function. It will panic upon encountering an error.
 // This can erradicate boiler-plate error handing code.
 func MustE(ctx context.Context, db ExecContexter, query string, options *Options, args ...interface{}) sql.Result {
-	EkXBAk, jQZLCt := E(ctx, db, query, options, args...)
-	if jQZLCt != nil {
-		panic(jQZLCt)
+	BmyArK, Ctzkjk := E(ctx, db, query, options, args...)
+	if Ctzkjk != nil {
+		panic(Ctzkjk)
 	}
-	return EkXBAk
+	return BmyArK
 }
 
 // E is a wrapper around the Q function. It is used for "Exec" queries such as insert, update and delete.
@@ -141,11 +141,11 @@ func E(ctx context.Context, db ExecContexter, query string, options *Options, ar
 // MustQ is a wrapper around the Q function. It will panic upon encountering an error.
 // This can erradicate boiler-plate error handing code.
 func MustQ(ctx context.Context, db interface{}, query string, options *Options, args ...interface{}) interface{} {
-	TMtTCo, aNatyy := Q(ctx, db, query, options, args...)
-	if aNatyy != nil {
-		panic(aNatyy)
+	ZIvaBj, MkXVbW := Q(ctx, db, query, options, args...)
+	if MkXVbW != nil {
+		panic(MkXVbW)
 	}
-	return TMtTCo
+	return ZIvaBj
 }
 
 // Q is a convenience function that is used for inserting, updating, deleting, and querying a SQL database.
