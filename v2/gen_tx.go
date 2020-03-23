@@ -28,7 +28,7 @@ type EFn func(ctx context.Context, query string, options *Options, args ...inter
 // TxCommit will commit the transaction.
 type TxCommit func() error
 
-// Tx is used to perform an arbitrary operation and not have to worry about rolling back a transaction.
+// Tx is used to perform an arbitrarily complex operation and not have to worry about rolling back a transaction.
 // The transaction is automatically rolled back unless committed by calling txCommit.
 // tx is only exposed for performance purposes. Do not use it to commit or rollback.
 //
