@@ -239,7 +239,7 @@ dbq.Tx(ctx, pool, func(tx interface{}, Q dbq.QFn, E dbq.EFn, txCommit dbq.TxComm
   if err != nil {
     return // Automatic rollback
   }
-  txCommit()
+  txCommit() // Commit
 })
 ```
 
