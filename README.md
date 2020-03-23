@@ -227,7 +227,7 @@ opts := &dbq.Options{
 
 You can conveniently perform numerous complex database operations within a transaction without having to worry about rolling back. Unless you explicitly commit, it will automatically rollback.
 
-You have access to the `Q` and `E` function as well as the original `tx` for performance purposes.
+You have access to the `Q` and `E` function as well as the underlying `tx` for performance purposes.
 
 ```go
 ctx := context.Background()
