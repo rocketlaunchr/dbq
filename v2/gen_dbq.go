@@ -229,6 +229,9 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 		operation := func() error {
 			res, err = db.(ExecContexter).ExecContext(ctx, query, args...)
 			if err != nil {
+				if err == sql.ErrTxDone || err == sql.ErrConnDone || (strings.Contains(err.Error(), "sql: expected") && strings.Contains(err.Error(), "arguments, got")) {
+					return &backoff.PermanentError{err}
+				}
 				return err
 			}
 			return nil
@@ -275,6 +278,9 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 			operation = func() error {
 				rows, err = db.QueryContext(ctx, query, args...)
 				if err != nil {
+					if err == sql.ErrTxDone || err == sql.ErrConnDone || (strings.Contains(err.Error(), "sql: expected") && strings.Contains(err.Error(), "arguments, got")) {
+						return &backoff.PermanentError{err}
+					}
 					return err
 				}
 				return nil
@@ -283,6 +289,9 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 			operation = func() error {
 				rows, err = db.QueryContext(ctx, query, args...)
 				if err != nil {
+					if err == sql.ErrTxDone || err == sql.ErrConnDone || (strings.Contains(err.Error(), "sql: expected") && strings.Contains(err.Error(), "arguments, got")) {
+						return &backoff.PermanentError{err}
+					}
 					return err
 				}
 				return nil
