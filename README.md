@@ -218,8 +218,6 @@ func (u *user) PostUnmarshal(ctx context.Context, row, count int) error {
 If the database operation fails, you can automatically retry with exponentially increasing intervals between each retry attempt. You can also set the maximum number of retries.
 
 ```go
-import "github.com/cenkalti/backoff/v4"
-
 opts := &dbq.Options{
   RetryPolicy:  dbq.ExponentialRetryPolicy(60 * time.Second, 3),
 }
