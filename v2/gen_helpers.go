@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"cloud.google.com/go/civil"
-	// "github.com/cenkalti/backoff/v4"
-	"gopkg.in/cenkalti/backoff.v4"
+	"github.com/cenkalti/backoff/v4"
+	// "gopkg.in/cenkalti/backoff.v4"
 )
 
 // Database is used to set the Database.

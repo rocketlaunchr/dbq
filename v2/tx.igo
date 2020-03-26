@@ -9,8 +9,8 @@ import (
 	"time"
 
 	rlSql "github.com/rocketlaunchr/mysql-go"
-	"gopkg.in/cenkalti/backoff.v4"
-	// "github.com/cenkalti/backoff/v4"
+	// "gopkg.in/cenkalti/backoff.v4"
+	"github.com/cenkalti/backoff/v4"
 )
 
 type txer interface {
@@ -119,7 +119,7 @@ func Tx(ctx context.Context, db interface{}, fn func(tx interface{}, Q QFn, E EF
 		}
 
 		// Keep trying to rollback
-		exp := dbq.ExponentialRetryPolicy(120 * time.Second)
+		exp := ExponentialRetryPolicy(120 * time.Second)
 		err := backoff.Retry(op2, backoff.WithContext(exp, ctx))
 		if err != nil {
 			return &backoff.PermanentError{err}
