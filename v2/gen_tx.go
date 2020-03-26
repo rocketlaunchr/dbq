@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	rlSql "github.com/rocketlaunchr/mysql-go"
 	"gopkg.in/cenkalti/backoff.v4"
@@ -29,7 +30,7 @@ type EFn func(ctx context.Context, query string, options *Options, args ...inter
 type TxCommit func() error
 
 // Tx is used to perform an arbitrarily complex operation and not have to worry about rolling back a transaction.
-// The transaction is automatically rolled back unless committed by calling txCommit.
+// The transaction is automatically rolled back unless explicitly committed by calling txCommit.
 // tx is only exposed for performance purposes. Do not use it to commit or rollback.
 //
 // NOTE: Until this note is removed, this function is not necessarily backward compatible.
@@ -109,11 +110,21 @@ func Tx(ctx context.Context, db interface{}, fn func(tx interface{}, Q QFn, E EF
 		if completed {
 			return nil
 		}
-		err = tx.(txer).Rollback()
-		if err == sql.ErrTxDone {
-			return nil
+
+		op2 := func() error {
+			err = tx.(txer).Rollback()
+			if err == sql.ErrTxDone {
+				return nil
+			}
+			return err
 		}
-		return err
+
+		exp := dbq.ExponentialRetryPolicy(120 * time.Second)
+		err := backoff.Retry(op2, backoff.WithContext(exp, ctx))
+		if err != nil {
+			return &backoff.PermanentError{err}
+		}
+		return nil
 	}
 
 	if !(len(retryPolicy) > 0 && retryPolicy[0] != nil) {
