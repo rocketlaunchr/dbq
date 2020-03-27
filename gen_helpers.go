@@ -26,11 +26,18 @@ const (
 	PostgreSQL Database = 1
 )
 
-// INSERT will generate an INSERT statement.
+// INSERTStmt will generate an INSERT statement. It can be used for bulk inserts.
 //
 // NOTE: You may have to escape the column names. For MySQL, use backticks.
-func INSERT(tableName string, columns []string, rows int, dbtype ...Database) string {
+func INSERTStmt(tableName string, columns []string, rows int, dbtype ...Database) string {
 	return fmt.Sprintf("INSERT INTO %s ( %s ) VALUES %s", tableName, strings.Join(columns, ","), Ph(len(columns), rows, 0, dbtype...))
+}
+
+// INSERT is the legacy equivalent of INSERTStmt.
+//
+// WARNING: This function has been deprecated and will be removed in v3.
+func INSERT(tableName string, columns []string, rows int, dbtype ...Database) string {
+	return InsertStmt(tableName, columns, rows, dbtype...)
 }
 
 // Ph generates the placeholders for SQL queries.
