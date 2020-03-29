@@ -37,7 +37,7 @@ func INSERTStmt(tableName string, columns []string, rows int, dbtype ...Database
 //
 // WARNING: This function has been deprecated and will be removed in v3.
 func INSERT(tableName string, columns []string, rows int, dbtype ...Database) string {
-	return InsertStmt(tableName, columns, rows, dbtype...)
+	return INSERTStmt(tableName, columns, rows, dbtype...)
 }
 
 // Ph generates the placeholders for SQL queries.
