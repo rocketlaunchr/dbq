@@ -69,7 +69,7 @@ users := []interface{}{
   dbq.Struct(Row{"Emily", 22, time.Now()}),
 }
 
-stmt := dbq.INSERT("users", []string{"name", "age", "created_at"}, len(users))
+stmt := dbq.INSERTStmt("users", []string{"name", "age", "created_at"}, len(users))
 
 dbq.E(ctx, db, stmt, nil, users)
 
@@ -235,7 +235,7 @@ pool, _ := sql.Open("mysql", "user:password@tcp(localhost:3306)/db")
 
 dbq.Tx(ctx, pool, func(tx interface{}, Q dbq.QFn, E dbq.EFn, txCommit dbq.TxCommit) {
   
-  stmt := dbq.INSERT("table", []string{"name", "age", "created_at"}, 1)
+  stmt := dbq.INSERTStmt("table", []string{"name", "age", "created_at"}, 1)
   res, err := E(ctx, stmt, nil, "test name", 34, time.Now())
   if err != nil {
     return // Automatic rollback
