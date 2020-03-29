@@ -12,7 +12,9 @@ import (
 	"time"
 
 	"cloud.google.com/go/civil"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/rocketlaunchr/dbq/v2"
+	// "gopkg.in/cenkalti/backoff.v4"
 )
 
 type res struct{}
@@ -43,6 +45,14 @@ type BulkUpdateOptions struct {
 
 	// DBType sets the database being used. The default is MySQL.
 	DBType dbq.Database
+
+	// RetryPolicy can be set if you want to retry the query in the event of failure.
+	//
+	// Example:
+	//
+	//  dbq.ExponentialRetryPolicy(60 * time.Second, 3)
+	//
+	RetryPolicy backoff.BackOff
 }
 
 // BulkUpdate is used to update multiple rows in a table without a transaction.
@@ -185,5 +195,10 @@ func BulkUpdate(ctx context.Context, db dbq.ExecContexter, updateData map[interf
 
 	queryArgs = append(queryArgs, primaryKeys...)
 
-	return dbq.E(ctx, db, stmt, nil, queryArgs...)
+	var dbqOpts dbq.Options
+	if opts.RetryPolicy != nil {
+		dbqOpts.RetryPolicy = opts.RetryPolicy
+	}
+
+	return dbq.E(ctx, db, stmt, dbqOpts, queryArgs...)
 }
