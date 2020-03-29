@@ -200,5 +200,5 @@ func BulkUpdate(ctx context.Context, db dbq.ExecContexter, updateData map[interf
 		dbqOpts.RetryPolicy = opts.RetryPolicy
 	}
 
-	return dbq.E(ctx, db, stmt, dbqOpts, queryArgs...)
+	return dbq.E(ctx, db, stmt, &dbqOpts, queryArgs...)
 }
