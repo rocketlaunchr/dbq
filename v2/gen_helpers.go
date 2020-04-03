@@ -110,7 +110,7 @@ func sliceConv(arg reflect.Value) []interface{} {
 // ExponentialRetryPolicy is a retry policy with exponentially increasing intervals between
 // each retry attempt. If maxElapsedTime is 0, it will retry forever unless restricted by retryAttempts.
 //
-// See: https://godoc.org/github.com/cenkalti/backoff#ExponentialBackOff
+// See: https://godoc.org/gopkg.in/cenkalti/backoff.v4#ExponentialBackOff
 func ExponentialRetryPolicy(maxElapsedTime time.Duration, retryAttempts ...uint64) backoff.BackOff {
 	bo := backoff.NewExponentialBackOff()
 	bo.MaxElapsedTime = maxElapsedTime
@@ -125,7 +125,7 @@ func ExponentialRetryPolicy(maxElapsedTime time.Duration, retryAttempts ...uint6
 // ConstantDelayRetryPolicy is a retry policy with constant intervals between
 // each retry attempt. It will retry forever unless restricted by retryAttempts.
 //
-// See: https://godoc.org/github.com/cenkalti/backoff#ConstantBackOff
+// See: https://godoc.org/gopkg.in/cenkalti/backoff.v4#ConstantBackOff
 func ConstantDelayRetryPolicy(interval time.Duration, retryAttempts ...uint64) backoff.BackOff {
 	bo := backoff.NewConstantBackOff(interval)
 
