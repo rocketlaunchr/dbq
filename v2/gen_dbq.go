@@ -330,7 +330,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 			for colID, elem := range rowData {
 				fieldName := cols[colID].Name()
 				raw := elem.(*[]byte)
-				if raw == nil || *raw == nil {
+				if *raw == nil {
 					vals[fieldName] = nil
 				} else {
 					vals[fieldName] = string(*raw)
@@ -352,7 +352,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 
 				var val *string
 
-				if !(raw == nil || *raw == nil) {
+				if *raw != nil {
 					val = &[]string{string(*raw)}[0]
 				}
 
