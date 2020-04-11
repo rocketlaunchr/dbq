@@ -246,7 +246,16 @@ dbq.Tx(ctx, pool, func(tx interface{}, Q dbq.QFn, E dbq.EFn, txCommit dbq.TxComm
 
 ## Custom Queries
 
-The `v2/x` subpackage will house functions to perform custom SQL queries. If you believe that a particular query is common or useful, submit a PR. They can be general to both MySQL and PostgreSQL or specific to either.
+The `v2/x` subpackage will house functions to perform custom SQL queries. If they are general to both MySQL and PostgreSQL, they are inside the `x` subpackage. If they are specific to MySQL xor PostgreSQL, they are in the `x/mysql` xor `x/pg` subpackage respectively.
+
+
+### This is your package too!
+
+If you want your own custom functions included, just submit a PR and place it in your **own directory** inside `v2/x`. As long as it compiles and is well documented it is welcome.
+
+### Bulk Update
+
+As a warmup, I have included a Bulk Update function that works with MySQL and PostgreSQL. It allows you to update multiple rows in 1 query without a transaction!
 
 ## Difference between v1 and v2
 
