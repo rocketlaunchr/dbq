@@ -269,7 +269,7 @@ func Qs(ctx context.Context, db interface{}, query string, ConcreteStruct interf
 
 // MustQs is a wrapper around the Qs function. It will panic upon encountering an error.
 // This can erradicate boiler-plate error handing code.
-func MustQs(ctx context.Context, db interface{}, query string, ConcreteStruct interface{}, options *Options, args ...interface{}) (out interface{}, rErr error) {
+func MustQs(ctx context.Context, db interface{}, query string, ConcreteStruct interface{}, options *Options, args ...interface{}) interface{} {
 	UOpEdK, updOMe := Qs(ctx, db, query, ConcreteStruct, options, args...)
 	if updOMe != nil {
 		panic(updOMe)

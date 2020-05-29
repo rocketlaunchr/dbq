@@ -122,7 +122,7 @@ func (o *Options) Q(ctx context.Context, db interface{}, query string, args ...i
 
 // MustQ is a convenience function that calls dbq.MustQ.
 // It allows you to recycle common options.
-func (o *Options) MustQ(ctx context.Context, db interface{}, query string, args ...interface{}) (out interface{}, rErr error) {
+func (o *Options) MustQ(ctx context.Context, db interface{}, query string, args ...interface{}) interface{} {
 	return MustQ(ctx, db, query, o, args...)
 }
 
@@ -134,7 +134,7 @@ func (o *Options) Qs(ctx context.Context, db interface{}, query string, Concrete
 
 // MustQs is a convenience function that calls dbq.MustQs.
 // It allows you to recycle common options.
-func (o *Options) MustQs(ctx context.Context, db interface{}, query string, ConcreteStruct interface{}, args ...interface{}) (out interface{}, rErr error) {
+func (o *Options) MustQs(ctx context.Context, db interface{}, query string, ConcreteStruct interface{}, args ...interface{}) interface{} {
 	return MustQs(ctx, db, query, ConcreteStruct, o, args...)
 }
 
