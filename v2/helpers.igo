@@ -36,7 +36,7 @@ func INSERTStmt(tableName string, columns []string, rows int, dbtype ...Database
 
 // INSERT is the legacy equivalent of INSERTStmt.
 //
-// WARNING: This function has been deprecated and will be removed in v3.
+// Deprecated: It will be removed in v3. Use INSERTStmt instead.
 func INSERT(tableName string, columns []string, rows int, dbtype ...Database) string {
 	return INSERTStmt(tableName, columns, rows, dbtype...)
 }
