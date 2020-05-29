@@ -5,6 +5,7 @@
 package dbq
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
@@ -248,6 +249,32 @@ func Struct(strct interface{}, tagName ...string) []interface{} {
 	}
 
 	return out
+}
+
+// Qs operates the same as Q except it requires you to provide a ConcreteStruct as an argument.
+// This allows you to recycle common options and conveniently provide a different ConcreteStruct.
+func Qs(ctx context.Context, db interface{}, query string, ConcreteStruct interface{}, options *Options, args ...interface{}) (out interface{}, rErr error) {
+	if ConcreteStruct == nil {
+		panic("ConcreteStruct required")
+	}
+	var o Options
+	if options == nil {
+		o.ConcreteStruct = ConcreteStruct
+	} else {
+		o = *options
+		o.ConcreteStruct = ConcreteStruct
+	}
+	return Q(ctx, db, query, &o, args...)
+}
+
+// MustQs is a wrapper around the Qs function. It will panic upon encountering an error.
+// This can erradicate boiler-plate error handing code.
+func MustQs(ctx context.Context, db interface{}, query string, ConcreteStruct interface{}, options *Options, args ...interface{}) (out interface{}, rErr error) {
+	UOpEdK, updOMe := Qs(ctx, db, query, ConcreteStruct, options, args...)
+	if updOMe != nil {
+		panic(updOMe)
+	}
+	return UOpEdK
 }
 
 func parseUintP(s string) *uint {
