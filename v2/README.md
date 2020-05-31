@@ -49,32 +49,6 @@ Let's assume a table called `users`:
 | 2   | Peter | 15  | 2019-02-01 |
 | 3   | Tom   | 18  | 2019-01-01 |
 
-### Bulk Insert
-
-You can insert multiple rows at once.
-
-```go
-
-db, _ := sql.Open("mysql", "user:password@tcp(localhost:3306)/db")
-
-type Row struct {
-  Name      string
-  Age       int
-  CreatedAt time.Time
-}
-
-users := []interface{}{
-  dbq.Struct(Row{"Brad", 45, time.Now()}),
-  dbq.Struct(Row{"Ange", 36, time.Now()}),
-  dbq.Struct(Row{"Emily", 22, time.Now()}),
-}
-
-stmt := dbq.INSERTStmt("users", []string{"name", "age", "created_at"}, len(users))
-
-dbq.E(ctx, db, stmt, nil, users)
-
-```
-
 ### Query
 
 `dbq.Q` ordinarily returns `[]map[string]interface{}` results, but you can automatically
@@ -116,24 +90,6 @@ Results:
   Name: (string) (len=3) "Tom",
   Age: (int) 18,
   CreatedAt: (time.Time) 2019-01-01 00:00:00 +0000 UTC
- }),
- (*main.user)(0xc00009e5c0)({
-  ID: (int) 4,
-  Name: (string) (len=4) "Brad",
-  Age: (int) 45,
-  CreatedAt: (time.Time) 2019-07-24 14:36:58 +0000 UTC
- }),
- (*main.user)(0xc00009e700)({
-  ID: (int) 5,
-  Name: (string) (len=4) "Ange",
-  Age: (int) 36,
-  CreatedAt: (time.Time) 2019-07-24 14:36:58 +0000 UTC
- }),
- (*main.user)(0xc00009e840)({
-  ID: (int) 6,
-  Name: (string) (len=5) "Emily",
-  Age: (int) 22,
-  CreatedAt: (time.Time) 2019-07-24 14:36:58 +0000 UTC
  })
 }
 ```
@@ -149,6 +105,32 @@ if result == nil {
 } else {
   result.(map[string]interface{})
 }
+
+```
+
+### Bulk Insert
+
+You can insert multiple rows at once.
+
+```go
+
+db, _ := sql.Open("mysql", "user:password@tcp(localhost:3306)/db")
+
+type Row struct {
+  Name      string
+  Age       int
+  CreatedAt time.Time
+}
+
+users := []interface{}{
+  dbq.Struct(Row{"Brad", 45, time.Now()}),
+  dbq.Struct(Row{"Ange", 36, time.Now()}),
+  dbq.Struct(Row{"Emily", 22, time.Now()}),
+}
+
+stmt := dbq.INSERTStmt("users", []string{"name", "age", "created_at"}, len(users))
+
+dbq.E(ctx, db, stmt, nil, users)
 
 ```
 
@@ -210,6 +192,21 @@ type user struct {
 func (u *user) PostUnmarshal(ctx context.Context, row, count int) error {
   u.HashedID = obfuscate(u.ID)
   return nil
+}
+```
+
+### ScanFaster
+
+The `ScanFaster` interface eradicates the use of the reflect package when unmarshaling. If you don't need to perform fancy time conversions or interpret weakly typed data, then it is more performant.
+
+```go
+type user struct {
+  ID       int    `dbq:"id"`
+  Name     string `dbq:"name"`
+}
+
+func (u *user) ScanFast() []interface{}
+  return []interface{}{&u.ID, &u.Name}
 }
 ```
 
