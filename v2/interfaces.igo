@@ -9,6 +9,32 @@ import (
 	rlSql "github.com/rocketlaunchr/mysql-go"
 )
 
+// ScanFaster eradicates the use of the reflect package when unmarshaling.
+// The ConcreteStruct pointer must implement this interface to make use of this feature.
+// This is the recommended approach as it is more performant.
+//
+// Example:
+//
+//  type user struct {
+//   ID       int    `dbq:"id"`
+//   Name     string `dbq:"name"`
+//  }
+//
+//  func (u *user) ScanFast() []interface{}
+//   return []interface{}{&u.ID, &u.Name}
+//  }
+//
+type ScanFaster interface {
+
+	// ScanFast is used to directly scan the results from the query to the ConcreteStruct pointer.
+	// The number of columns returned from the query must match the length of the slice returned.
+	//
+	// See: https://golang.org/pkg/database/sql/#Rows.Scan
+	//
+	// WARNING: "SELECT * FROM ..." may return more columns in the future when the table structure changes.
+	ScanFast() []interface{}
+}
+
 // PostUnmarshaler allows you to further modify all results after unmarshaling.
 // The ConcreteStruct pointer must implement this interface to make use of this feature.
 //
