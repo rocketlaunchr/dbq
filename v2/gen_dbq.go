@@ -231,10 +231,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 	totalColumns := len(cols)
 
 	for rows.Next() {
-		rowData := make([]interface{}, totalColumns)
-		for i := range rowData {
-			rowData[i] = &sql.RawBytes{}
-		}
+		var rowData []interface{}
 
 		if scanFast {
 			res := reflect.New(reflect.TypeOf(o.ConcreteStruct)).Interface()
@@ -244,6 +241,10 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 			outStruct = reflect.Append(outStruct.(reflect.Value), reflect.ValueOf(res))
 			continue
 		} else {
+			rowData = make([]interface{}, totalColumns)
+			for i := range rowData {
+				rowData[i] = &sql.RawBytes{}
+			}
 			if err := rows.Scan(rowData...); err != nil {
 				return nil, err
 			}
