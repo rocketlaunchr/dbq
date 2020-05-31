@@ -9,6 +9,29 @@ import (
 	rlSql "github.com/rocketlaunchr/mysql-go"
 )
 
+// PostUnmarshaler allows you to further modify all results after unmarshaling.
+// The ConcreteStruct pointer must implement this interface to make use of this feature.
+//
+// Example:
+//
+//  type user struct {
+//   ID       int    `dbq:"id"`
+//   Name     string `dbq:"name"`
+//   HashedID string `dbq:"-"` // Obfuscated ID
+//  }
+//
+//  func (u *user) PostUnmarshal(ctx context.Context, row, count int) error {
+//   u.HashedID = obfuscate(u.ID)
+//   return nil
+//  }
+//
+type PostUnmarshaler interface {
+
+	// PostUnmarshal is called for each row after all results have been fetched.
+	// You can use it to further modify the values of each ConcreteStruct.
+	PostUnmarshal(ctx context.Context, row, count int) error
+}
+
 // ExecContexter is for modifying the database state.
 type ExecContexter interface {
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
