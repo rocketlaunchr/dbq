@@ -13,7 +13,8 @@ import (
 
 // ScanFaster eradicates the use of the reflect package when unmarshaling.
 // The ConcreteStruct pointer must implement this interface to make use of this feature.
-// This is the recommended approach as it is more performant.
+// If you don't need to perform fancy time conversions or interpret weakly typed data (via mapstructure pkg), then
+// this is the recommended approach as it is more performant.
 //
 // Example:
 //

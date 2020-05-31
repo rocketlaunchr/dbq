@@ -157,15 +157,17 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 	wasQuery = true
 
 	var (
-		outStruct interface{}
-		outMap    = []map[string]interface{}{}
-		scanFast  bool
+		outStruct     interface{}
+		outMap        = []map[string]interface{}{}
+		scanFast      bool
+		postUnmarshal bool
 	)
 
 	if o.ConcreteStruct != nil {
 
 		csTyp := reflect.New(reflect.TypeOf(o.ConcreteStruct)).Interface()
 		_, scanFast = csTyp.(ScanFaster)
+		_, postUnmarshal = csTyp.(PostUnmarshaler)
 
 		typ := reflect.SliceOf(reflect.PtrTo(reflect.TypeOf(o.ConcreteStruct)))
 		outStruct = reflect.MakeSlice(typ, 0, 0)
@@ -614,11 +616,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 		rows := outStruct.(reflect.Value)
 		count := rows.Len()
 		if count > 0 {
-			csTyp := reflect.TypeOf(reflect.New(reflect.TypeOf(o.ConcreteStruct)).Interface())
-			ics := reflect.TypeOf((*PostUnmarshaler)(nil)).Elem()
-
-			if csTyp.Implements(ics) {
-
+			if postUnmarshal {
 				if o.ConcurrentPostUnmarshal && runtime.GOMAXPROCS(0) > 1 {
 					g, newCtx := errgroup.WithContext(ctx)
 
@@ -629,9 +627,8 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 								return err
 							}
 
-							row := reflect.ValueOf(rows.Index(i).Interface())
-							retVals := row.MethodByName("PostUnmarshal").Call([]reflect.Value{reflect.ValueOf(newCtx), reflect.ValueOf(i), reflect.ValueOf(count)})
-							err := retVals[0].Interface()
+							row := rows.Index(i).Interface()
+							err := row.(PostUnmarshaler).PostUnmarshal(newCtx, i, count)
 							if err != nil {
 								return xerrors.Errorf("dbq.PostUnmarshal @ row %d: %w", i, err)
 							}
@@ -647,9 +644,9 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 						if err := ctx.Err(); err != nil {
 							return nil, err
 						}
-						row := reflect.ValueOf(rows.Index(i).Interface())
-						retVals := row.MethodByName("PostUnmarshal").Call([]reflect.Value{reflect.ValueOf(ctx), reflect.ValueOf(i), reflect.ValueOf(count)})
-						err := retVals[0].Interface()
+
+						row := rows.Index(i).Interface()
+						err := row.(PostUnmarshaler).PostUnmarshal(ctx, i, count)
 						if err != nil {
 							return nil, xerrors.Errorf("dbq.PostUnmarshal @ row %d: %w", i, err)
 						}
