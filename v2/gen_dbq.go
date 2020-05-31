@@ -229,10 +229,9 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 	totalColumns := len(cols)
 
 	for rows.Next() {
-
 		rowData := make([]interface{}, totalColumns)
 		for i := range rowData {
-			rowData[i] = &[]byte{}
+			rowData[i] = &sql.RawBytes{}
 		}
 
 		if scanFast {
@@ -252,7 +251,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 		if o.ConcreteStruct != nil {
 			for colID, elem := range rowData {
 				fieldName := cols[colID].Name()
-				raw := elem.(*[]byte)
+				raw := elem.(*sql.RawBytes)
 				if *raw == nil {
 					vals[fieldName] = nil
 				} else {
@@ -299,10 +298,12 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 
 		for colID, elem := range rowData {
 			fieldName := cols[colID].Name()
-			raw := elem.(*[]byte)
+			raw := elem.(*sql.RawBytes)
 
 			if o.RawResults {
-				vals[fieldName] = *raw
+				cpy := make([]byte, len(*raw))
+				copy(cpy, []byte(*raw))
+				vals[fieldName] = cpy
 				continue
 			}
 
