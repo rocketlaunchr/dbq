@@ -252,7 +252,7 @@ If you want your own custom functions included, just submit a PR and place it in
 
 ### Bulk Update
 
-As a warmup, I have included a Bulk Update function that works with MySQL and PostgreSQL. It allows you to update multiple rows in 1 query without a transaction!
+As a warmup, I have included a [Bulk Update](https://godoc.org/github.com/rocketlaunchr/dbq/v2/x#BulkUpdate) function that works with MySQL and PostgreSQL. It allows you to update thousands of rows in 1 query without a transaction!
 
 ## Difference between v1 and v2
 
