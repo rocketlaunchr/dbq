@@ -205,7 +205,7 @@ type user struct {
   Name     string `dbq:"name"`
 }
 
-func (u *user) ScanFast() []interface{}
+func (u *user) ScanFast() []interface{} {
   return []interface{}{&u.ID, &u.Name}
 }
 ```
