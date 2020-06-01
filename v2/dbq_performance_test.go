@@ -22,6 +22,7 @@ var (
 	_   = spew.UnsafeDisabled
 )
 
+// Add DB credentials here
 var (
 	user   string = ""
 	pword  string = ""
@@ -42,30 +43,20 @@ func init() {
 	}
 }
 
-type modeldbq struct {
-	ID    int    `dbq:"id"`
-	Name  string `dbq:"name"`
-	Email string `dbq:"email"`
+type model struct {
+	ID    int    `dbq:"id" gorm:"column:id" db:"id"`
+	Name  string `dbq:"name" gorm:"column:name" db:"name"`
+	Email string `dbq:"email" gorm:"column:email" db:"email"`
 }
 
-func (m *modeldbq) ScanFast() []interface{} {
+// Recommended by dbq
+func (m *model) ScanFast() []interface{} {
 	return []interface{}{&m.ID, &m.Name, &m.Email}
 }
 
-type modelgorm struct {
-	ID    int    `gorm:"column:id"`
-	Name  string `gorm:"column:name"`
-	Email string `gorm:"column:email"`
-}
-
-func (modelgorm) TableName() string {
+// Required by gorm
+func (model) TableName() string {
 	return "tests"
-}
-
-type modelsqlx struct {
-	ID    int    `db:"id"`
-	Name  string `db:"name"`
-	Email string `db:"email"`
 }
 
 func Benchmark(b *testing.B) {
@@ -79,32 +70,32 @@ func Benchmark(b *testing.B) {
 		10000,
 	}
 
-	// Benchmark dbq
 	for _, lim := range limits {
 		lim := lim
+
+		q := fmt.Sprintf("SELECT id, name, email FROM tests ORDER BY id LIMIT %d", lim)
+
+		// Benchmark dbq
 		b.Run(fmt.Sprintf("dbq limit:%d", lim), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				res, err := dbq.Qs(ctx, db, q("tests", lim), modeldbq{}, nil)
+				res, err := dbq.Qs(ctx, db, q, model{}, nil)
 				if err != nil {
 					b.Fatal(err)
 				}
-				if len(res.([]*modeldbq)) != lim {
+				if len(res.([]*model)) != lim {
 					panic("something is wrong")
 				}
 				// spew.Dump(res)
 			}
 		})
-	}
 
-	// Benchmark sqlx
-	for _, lim := range limits {
-		lim := lim
+		// Benchmark sqlx
 		b.Run(fmt.Sprintf("sqlx limit:%d", lim), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				db := sqlx.NewDb(db, "mysql")
 
-				res := []modelsqlx{}
-				err := db.Select(&res, q("tests", lim))
+				res := []model{}
+				err := db.Select(&res, q)
 				if err != nil {
 					panic(err)
 				}
@@ -114,11 +105,8 @@ func Benchmark(b *testing.B) {
 				// spew.Dump(res)
 			}
 		})
-	}
 
-	// Benchmark gorm
-	for _, lim := range limits {
-		lim := lim
+		// Benchmark gorm
 		b.Run(fmt.Sprintf("gorm limit:%d", lim), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				g, err := gorm.Open("mysql", db)
@@ -126,7 +114,7 @@ func Benchmark(b *testing.B) {
 					panic(err)
 				}
 
-				var res = []modelgorm{}
+				var res = []model{}
 
 				err = g.Order("id").Limit(lim).Find(&res).Error
 				if err != nil {
@@ -138,11 +126,10 @@ func Benchmark(b *testing.B) {
 				// spew.Dump(res)
 			}
 		})
-	}
-}
 
-func q(table string, limit int) string {
-	return fmt.Sprintf("SELECT id, name, email FROM %s ORDER BY id LIMIT %d", table, limit)
+		fmt.Println("========================================================================")
+	}
+
 }
 
 func setup() {
