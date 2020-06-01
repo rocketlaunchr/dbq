@@ -73,11 +73,10 @@ func Benchmark(b *testing.B) {
 	for _, lim := range limits {
 		lim := lim
 
-		q := fmt.Sprintf("SELECT id, name, email FROM tests ORDER BY id LIMIT %d", lim)
-
 		// Benchmark dbq
 		b.Run(fmt.Sprintf("dbq limit:%d", lim), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
+				q := fmt.Sprintf("SELECT id, name, email FROM tests ORDER BY id LIMIT %d", lim)
 				res, err := dbq.Qs(ctx, db, q, model{}, nil)
 				if err != nil {
 					b.Fatal(err)
@@ -93,6 +92,7 @@ func Benchmark(b *testing.B) {
 		b.Run(fmt.Sprintf("sqlx limit:%d", lim), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				db := sqlx.NewDb(db, "mysql")
+				q := fmt.Sprintf("SELECT id, name, email FROM tests ORDER BY id LIMIT %d", lim)
 
 				res := []model{}
 				err := db.Select(&res, q)
