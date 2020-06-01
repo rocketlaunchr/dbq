@@ -189,7 +189,7 @@ type user struct {
   HashedID  string    `dbq:"-"`          // Obfuscate ID
 }
 
-func (u *user) PostUnmarshal(ctx context.Context, row, count int) error {
+func (u *user) PostUnmarshal(ctx context.Context, row, total int) error {
   u.HashedID = obfuscate(u.ID)
   return nil
 }

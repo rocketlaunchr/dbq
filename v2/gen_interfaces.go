@@ -49,7 +49,7 @@ type ScanFaster interface {
 //   HashedID string `dbq:"-"` // Obfuscated ID
 //  }
 //
-//  func (u *user) PostUnmarshal(ctx context.Context, row, count int) error {
+//  func (u *user) PostUnmarshal(ctx context.Context, row, total int) error {
 //   u.HashedID = obfuscate(u.ID)
 //   return nil
 //  }
@@ -58,7 +58,7 @@ type PostUnmarshaler interface {
 
 	// PostUnmarshal is called for each row after all results have been fetched.
 	// You can use it to further modify the values of each ConcreteStruct.
-	PostUnmarshal(ctx context.Context, row, count int) error
+	PostUnmarshal(ctx context.Context, row, total int) error
 }
 
 // ExecContexter is for modifying the database state.
