@@ -107,16 +107,16 @@ func Benchmark(b *testing.B) {
 		})
 
 		// Benchmark gorm
+		g, err := gorm.Open("mysql", db)
+		if err != nil {
+			panic(err)
+		}
+
 		b.Run(fmt.Sprintf("gorm limit:%d", lim), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				g, err := gorm.Open("mysql", db)
-				if err != nil {
-					panic(err)
-				}
-
 				var res = []model{}
 
-				err = g.Order("id").Limit(lim).Find(&res).Error
+				err := g.Order("id").Limit(lim).Find(&res).Error
 				if err != nil {
 					panic(err)
 				}
