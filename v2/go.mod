@@ -8,15 +8,18 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.3.3
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
+	github.com/brianvoe/gofakeit/v5 v5.6.3
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cenkalti/backoff/v4 v4.0.2
 	github.com/containerd/continuity v0.0.0-20191127005431-f65d91d395eb // indirect
+	github.com/davecgh/go-spew v1.1.1
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
-	github.com/go-sql-driver/mysql v1.5.0 // indirect
+	github.com/go-sql-driver/mysql v1.5.0
 	github.com/google/go-cmp v0.3.1
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
-	github.com/jmoiron/sqlx v1.2.0 // indirect
+	github.com/jinzhu/gorm v1.9.12
+	github.com/jmoiron/sqlx v1.2.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
