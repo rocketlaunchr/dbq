@@ -263,6 +263,7 @@ When a `ConcreteStruct` is provided, in `v1`, the `Q` and `MustQ` functions retu
 ## Other useful packages
 
 - [dataframe-go](https://github.com/rocketlaunchr/dataframe-go) - Statistics and data manipulation
+- [electron-alert](https://github.com/rocketlaunchr/electron-alert) - SweetAlert2 for Electron Applications
 - [igo](https://github.com/rocketlaunchr/igo) - A Go transpiler with cool new syntax such as fordefer (defer for for-loops)
 - [mysql-go](https://github.com/rocketlaunchr/mysql-go) - Properly cancel slow MySQL queries
 - [react](https://github.com/rocketlaunchr/react) - Build front end applications using Go

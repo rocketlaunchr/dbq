@@ -41,13 +41,12 @@ type TxCommit func() error
 //  pool, _ := sql.Open("mysql", "user:password@tcp(localhost:3306)/db")
 //
 //  dbq.Tx(ctx, pool, func(tx interface{}, Q dbq.QFn, E dbq.EFn, txCommit dbq.TxCommit) {
-//
-//  	stmt := dbq.INSERTStmt("table", []string{"name", "age", "created_at"}, 1)
-//  	res, err := E(ctx, stmt, nil, "test name", 34, time.Now())
-//  	if err != nil {
-//  		return // Automatic rollback
-//  	}
-//  	txCommit()
+//   stmt := dbq.INSERTStmt("table", []string{"name", "age", "created_at"}, 1)
+//   res, err := E(ctx, stmt, nil, "test name", 34, time.Now())
+//   if err != nil {
+//    return // Automatic rollback
+//   }
+//   txCommit()
 //  })
 //
 func Tx(ctx context.Context, db interface{}, fn func(tx interface{}, Q QFn, E EFn, txCommit TxCommit), retryPolicy ...backoff.BackOff) error {

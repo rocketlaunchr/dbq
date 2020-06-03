@@ -31,7 +31,8 @@ const (
 
 // INSERTStmt will generate an INSERT statement. It can be used for bulk inserts.
 //
-// NOTE: You may have to escape the column names. For MySQL, use backticks.
+// NOTE: You may have to escape the column names. For MySQL, use backticks. Databases also have a limit
+// to the number of query placeholders you can have. This will limit the number of rows you can insert.
 func INSERTStmt(tableName string, columns []string, rows int, dbtype ...Database) string {
 	return fmt.Sprintf("INSERT INTO %s ( %s ) VALUES %s", tableName, strings.Join(columns, ","), Ph(len(columns), rows, 0, dbtype...))
 }
@@ -58,6 +59,9 @@ func INSERT(tableName string, columns []string, rows int, dbtype ...Database) st
 //
 //  dbq.Ph(3, 2, 0)
 //  // Output: ( ?,?,? ),( ?,?,? )
+//
+//  dbq.Ph(3, 2, 6, dbq.PostgreSQL)
+//  // Output: ($7,$8,$9),($10,$11,$12)
 //
 func Ph(columnsN, rows int, incr int, dbtype ...Database) string {
 
