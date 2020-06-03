@@ -17,12 +17,12 @@ import (
 // Example:
 //
 //  type user struct {
-//   ID       int    `dbq:"id"`
-//   Name     string `dbq:"name"`
+//     ID       int    `dbq:"id"`
+//     Name     string `dbq:"name"`
 //  }
 //
 //  func (u *user) ScanFast() []interface{} {
-//   return []interface{}{&u.ID, &u.Name}
+//     return []interface{}{&u.ID, &u.Name}
 //  }
 //
 type ScanFaster interface {
@@ -42,14 +42,14 @@ type ScanFaster interface {
 // Example:
 //
 //  type user struct {
-//   ID       int    `dbq:"id"`
-//   Name     string `dbq:"name"`
-//   HashedID string `dbq:"-"` // Obfuscated ID
+//     ID       int    `dbq:"id"`
+//     Name     string `dbq:"name"`
+//     HashedID string `dbq:"-"` // Obfuscated ID
 //  }
 //
 //  func (u *user) PostUnmarshal(ctx context.Context, row, total int) error {
-//   u.HashedID = obfuscate(u.ID)
-//   return nil
+//     u.HashedID = obfuscate(u.ID)
+//     return nil
 //  }
 //
 type PostUnmarshaler interface {
