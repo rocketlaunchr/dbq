@@ -67,7 +67,9 @@ func MustQ(ctx context.Context, db interface{}, query string, options *Options, 
 // NOTE: sql.ErrNoRows is never returned as an error: usually, a slice is returned, unless the
 // behavior is modified by the SingleResult Option.
 func Q(ctx context.Context, db interface{}, query string, options *Options, args ...interface{}) (out interface{}, rErr error) {
-
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	var (
 		o        Options
 		wasQuery bool
