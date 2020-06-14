@@ -32,7 +32,7 @@ type ScanFaster interface {
 	//
 	// See: https://golang.org/pkg/database/sql/#Rows.Scan
 	//
-	// WARNING: "SELECT * FROM ..." may return more columns in the future when the table structure changes.
+	// WARNING: "SELECT * FROM ..." may return more columns in the future if the table structure changes.
 	ScanFast() []interface{}
 }
 

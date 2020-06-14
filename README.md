@@ -1,4 +1,7 @@
-# dbq - Barbeque the boilerplate code [![GoDoc](http://godoc.org/github.com/rocketlaunchr/dbq?status.svg)](https://godoc.org/github.com/rocketlaunchr/dbq/v2) [![Go Report Card](https://goreportcard.com/badge/github.com/rocketlaunchr/dbq)](https://goreportcard.com/report/github.com/rocketlaunchr/dbq)
+<p align="right">
+  <a href="http://godoc.org/github.com/rocketlaunchr/dbq"><img src="http://godoc.org/github.com/rocketlaunchr/dbq?status.svg" /></a>
+  <a href="https://goreportcard.com/report/github.com/rocketlaunchr/dbq"><img src="https://goreportcard.com/badge/github.com/rocketlaunchr/dbq" /></a>
+</p>
 
 <p align="center">
 <img src="https://github.com/rocketlaunchr/dbq/raw/master/logo.png" alt="dbq" />
@@ -66,6 +69,7 @@ type user struct {
 opts := &dbq.Options{ConcreteStruct: user{}, DecoderConfig:x}
 
 results, err := dbq.Q(ctx, db, "SELECT * FROM users", opts)
+results, err := dbq.Qs(ctx, db, "SELECT * FROM users", user{}, nil)
 
 ```
 
