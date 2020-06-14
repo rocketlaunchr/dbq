@@ -1,5 +1,5 @@
 <p align="right">
-  <a href="http://godoc.org/github.com/rocketlaunchr/dbq"><img src="http://godoc.org/github.com/rocketlaunchr/dbq?status.svg" /></a>
+  <a href="http://godoc.org/github.com/rocketlaunchr/dbq/v2"><img src="http://godoc.org/github.com/rocketlaunchr/dbq?status.svg" /></a>
   <a href="https://goreportcard.com/report/github.com/rocketlaunchr/dbq"><img src="https://goreportcard.com/badge/github.com/rocketlaunchr/dbq" /></a>
 </p>
 
