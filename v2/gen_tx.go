@@ -50,7 +50,9 @@ type TxCommit func() error
 //  })
 //
 func Tx(ctx context.Context, db interface{}, fn func(tx interface{}, Q QFn, E EFn, txCommit TxCommit), retryPolicy ...backoff.BackOff) error {
-
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	var (
 		alreadyTx bool
 		tx        interface{}
