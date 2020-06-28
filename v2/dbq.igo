@@ -91,6 +91,7 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 	if strings.HasPrefix(query, "(") && strings.HasSuffix(query, ")") {
 		query = strings.TrimPrefix(query, "(")
 		query = strings.TrimSuffix(query, ")")
+		query = strings.TrimSpace(query)
 	}
 	queryType := query[0:6]
 
