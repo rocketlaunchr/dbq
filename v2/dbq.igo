@@ -28,7 +28,6 @@ func MustE(ctx context.Context, db ExecContexter, query string, options *Options
 }
 
 // E is a wrapper around the Q function. It is used for "Exec" queries such as insert, update and delete.
-// It also returns a sql.Result interface instead of an empty interface.
 func E(ctx context.Context, db ExecContexter, query string, options *Options, args ...interface{}) (sql.Result, error) {
 
 	res, err := Q(ctx, db, query, options, args...)
