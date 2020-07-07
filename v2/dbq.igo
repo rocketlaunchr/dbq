@@ -45,16 +45,16 @@ func MustQ(ctx context.Context, db interface{}, query string, options *Options, 
 	return must(Q(ctx, db, query, options, args...))
 }
 
-// Q is a convenience function that is used for inserting, updating, deleting, and querying a SQL database.
-// For inserts, updates, and deletes, a sql.Result is returned.
-// For queries, a []map[string]interface{} is ordinarily returned. Each result (an item in the slice) contains
-// a map where the keys are the columns, and the values are the data for the column.
-// When a ConcreteStruct is provided via the Options, the mapstructure package is used to automatically
-// return []*structs instead. args is a list of values to replace the placeholders in the query. A single slice
-// (of any slice type) can be provided for the first arg. If so, the values will automatically be flattened to a list
-// of interface{}.
+// Q is used for querying a SQL database. A []map[string]interface{} is ordinarily returned.
+// Each returned row (an item in the slice) contains a map where the keys are the columns, and 
+// the values are the data for each column.
+// However, when a ConcreteStruct is provided via the options, the mapstructure package is used to automatically
+// return []*structs instead. 
 //
-// NOTE: sql.ErrNoRows is never returned as an error: usually, a slice is returned, unless the
+// args is a list of values to replace the placeholders in the query. When an arg is a slice, the values of the slice
+// will automatically be flattened to a list of interface{}.
+//
+// NOTE: sql.ErrNoRows is never returned as an error: A slice is always returned, unless the
 // behavior is modified by the SingleResult Option.
 func Q(ctx context.Context, db interface{}, query string, options *Options, args ...interface{}) (out interface{}, rErr error) {
 	if ctx == nil {
