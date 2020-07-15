@@ -107,7 +107,7 @@ func Ph(columnsN, rows int, incr int, dbtype ...Database) string {
 //  args3 := dbq.Struct(Row{"Brad Pitt", 45, time.Now()})
 //
 //  args := FlattenArgs(args1, args2, args3)
-//	// Output: []interface{}{"A", "B", "C", 2, "D", "Brad Pitt", 45, time.Now()}
+//  // Output: []interface{}{"A", "B", "C", 2, "D", "Brad Pitt", 45, time.Now()}
 func FlattenArgs(args ...interface{}) []interface{} {
 	out := make([]interface{}, 0, len(args))
 
