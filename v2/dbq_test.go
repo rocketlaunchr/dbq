@@ -189,7 +189,7 @@ func TestMustE(t *testing.T) {
 		DecodeHook:       mapstructure.StringToTimeHookFunc("2006-01-02 15:04:05"),
 		WeaklyTypedInput: true}}
 
-	_, err = E(ctx, db, "SELECT * FROM store", opts)
+	_, err = Q(ctx, db, "SELECT * FROM store", opts)
 	if err == nil {
 		t.Errorf("was expecting an error, but there was none.")
 	}

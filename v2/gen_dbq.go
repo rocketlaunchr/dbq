@@ -33,15 +33,54 @@ func MustE(ctx context.Context, db ExecContexter, query string, options *Options
 	return EkXBAk
 }
 
-// E is a wrapper around the Q function. It is used for "Exec" queries such as insert, update and delete.
+// E is used for "Exec" queries such as insert, update and delete.
+//
+// args is a list of values to replace the placeholders in the query. When an arg is a slice, the values of the slice
+// will automatically be flattened to a list of interface{}.
 func E(ctx context.Context, db ExecContexter, query string, options *Options, args ...interface{}) (sql.Result, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 
-	res, err := Q(ctx, db, query, options, args...)
+	for _, v := range args {
+		if arg := reflect.ValueOf(v); arg.Kind() == reflect.Slice {
+			args = FlattenArgs(args...)
+			break
+		}
+	}
+
+	if options == nil {
+		return db.ExecContext(ctx, query, args...)
+	}
+
+	o := *options
+
+	if o.RetryPolicy != nil {
+		o.RetryPolicy = backoff.WithContext(o.RetryPolicy, ctx)
+	} else {
+		return db.ExecContext(ctx, query, args...)
+	}
+
+	var res sql.Result
+
+	operation := func() error {
+		var err error
+		res, err = db.ExecContext(ctx, query, args...)
+		if err != nil {
+			if err == sql.ErrTxDone || err == sql.ErrConnDone || (strings.Contains(err.Error(), "sql: expected") && strings.Contains(err.Error(), "arguments, got")) {
+				return &backoff.PermanentError{err}
+			}
+			return err
+		}
+		return nil
+	}
+
+	err := backoff.Retry(operation, o.RetryPolicy)
 	if err != nil {
 		return nil, err
 	}
 
-	return res.(sql.Result), nil
+	return res, nil
 }
 
 // MustQ is a wrapper around the Q function. It will panic upon encountering an error.
@@ -69,11 +108,8 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	var (
-		o        Options
-		wasQuery bool
-	)
 
+	var o Options
 	if options != nil {
 		o = *options
 
@@ -83,80 +119,23 @@ func Q(ctx context.Context, db interface{}, query string, options *Options, args
 	}
 
 	defer func() {
-		if rErr == nil {
-			if wasQuery && o.SingleResult {
-				rows := reflect.ValueOf(out)
-				if rows.Len() == 0 {
-					out = nil
-				} else {
-					row := rows.Index(0)
-					out = row.Interface()
-				}
+		if rErr == nil && o.SingleResult {
+			rows := reflect.ValueOf(out)
+			if rows.Len() == 0 {
+				out = nil
+			} else {
+				row := rows.Index(0)
+				out = row.Interface()
 			}
 		}
 	}()
 
-	query = strings.TrimSpace(query)
-	if strings.HasPrefix(query, "(") && strings.HasSuffix(query, ")") {
-		query = strings.TrimPrefix(query, "(")
-		query = strings.TrimSuffix(query, ")")
-		query = strings.TrimSpace(query)
-	}
-	queryType := query[0:6]
-
-	foundSliceArg := false
 	for _, v := range args {
 		if arg := reflect.ValueOf(v); arg.Kind() == reflect.Slice {
-			foundSliceArg = true
+			args = FlattenArgs(args...)
 			break
 		}
 	}
-
-	if foundSliceArg {
-		newArgs := []interface{}{}
-		for _, v := range args {
-			if arg := reflect.ValueOf(v); arg.Kind() == reflect.Slice {
-				newArgs = append(newArgs, sliceConv(arg)...)
-			} else {
-				newArgs = append(newArgs, v)
-			}
-		}
-		args = newArgs
-	}
-
-	if queryType == "INSERT" || queryType == "insert" ||
-		queryType == "UPDATE" || queryType == "update" ||
-		queryType == "DELETE" || queryType == "delete" {
-
-		if o.RetryPolicy == nil {
-			return db.(ExecContexter).ExecContext(ctx, query, args...)
-		}
-
-		var (
-			err error
-			res sql.Result
-		)
-
-		operation := func() error {
-			res, err = db.(ExecContexter).ExecContext(ctx, query, args...)
-			if err != nil {
-				if err == sql.ErrTxDone || err == sql.ErrConnDone || (strings.Contains(err.Error(), "sql: expected") && strings.Contains(err.Error(), "arguments, got")) {
-					return &backoff.PermanentError{err}
-				}
-				return err
-			}
-			return nil
-		}
-
-		err = backoff.Retry(operation, o.RetryPolicy)
-		if err != nil {
-			return nil, err
-		}
-
-		return res, nil
-	}
-
-	wasQuery = true
 
 	var (
 		outStruct     interface{}

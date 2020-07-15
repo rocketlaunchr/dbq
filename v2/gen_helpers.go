@@ -98,15 +98,30 @@ func Ph(columnsN, rows int, incr int, dbtype ...Database) string {
 	return strings.TrimSuffix(singleValuesStr, ",")
 }
 
-func sliceConv(arg reflect.Value) []interface{} {
-	out := []interface{}{}
+// FlattenArgs will accept a list of values and flatten any slices encountered.
+func FlattenArgs(args ...interface{}) []interface{} {
+	out := make([]interface{}, 0, len(args))
 
-	if arg.Kind() == reflect.Slice {
-		for i := 0; i < arg.Len(); i++ {
-			out = append(out, sliceConv(reflect.ValueOf(arg.Index(i).Interface()))...)
+	var sliceConv func(reflect.Value)
+	sliceConv = func(arg reflect.Value) {
+		if arg.Kind() == reflect.Slice {
+			for i := 0; i < arg.Len(); i++ {
+				sliceConv(reflect.ValueOf(arg.Index(i).Interface()))
+			}
+		} else if !arg.IsValid() {
+			out = append(out, nil)
+		} else {
+			out = append(out, arg.Interface())
 		}
-	} else {
-		out = append(out, arg.Interface())
+	}
+
+	for i := range args {
+		arg := args[i]
+		if rarg := reflect.ValueOf(arg); rarg.Kind() == reflect.Slice {
+			sliceConv(rarg)
+		} else {
+			out = append(out, arg)
+		}
 	}
 
 	return out
@@ -245,7 +260,7 @@ func Struct(strct interface{}, tagName ...string) []interface{} {
 		}
 
 		if fieldValRaw.Kind() == reflect.Slice {
-			out = append(out, sliceConv(fieldValRaw)...)
+			out = append(out, FlattenArgs(fieldVal)...)
 			continue
 		}
 
@@ -274,11 +289,11 @@ func Qs(ctx context.Context, db interface{}, query string, ConcreteStruct interf
 // MustQs is a wrapper around the Qs function. It will panic upon encountering an error.
 // This can erradicate boiler-plate error handing code.
 func MustQs(ctx context.Context, db interface{}, query string, ConcreteStruct interface{}, options *Options, args ...interface{}) interface{} {
-	UOpEdK, updOMe := Qs(ctx, db, query, ConcreteStruct, options, args...)
-	if updOMe != nil {
-		panic(updOMe)
+	aRzLNT, XYeUCW := Qs(ctx, db, query, ConcreteStruct, options, args...)
+	if XYeUCW != nil {
+		panic(XYeUCW)
 	}
-	return UOpEdK
+	return aRzLNT
 }
 
 func parseUintP(s string) *uint {

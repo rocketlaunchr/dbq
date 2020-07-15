@@ -96,15 +96,30 @@ func Ph(columnsN, rows int, incr int, dbtype ...Database) string {
 	return strings.TrimSuffix(singleValuesStr, ",")
 }
 
-func sliceConv(arg reflect.Value) []interface{} {
-	out := []interface{}{}
+// FlattenArgs will accept a list of values and flatten any slices encountered.
+func FlattenArgs(args ...interface{}) []interface{} {
+	out := make([]interface{}, 0, len(args))
 
-	if arg.Kind() == reflect.Slice {
-		for i := 0; i < arg.Len(); i++ {
-			out = append(out, sliceConv(reflect.ValueOf(arg.Index(i).Interface()))...)
+	var sliceConv func(reflect.Value)
+	sliceConv = func(arg reflect.Value) {
+		if arg.Kind() == reflect.Slice {
+			for i := 0; i < arg.Len(); i++ {
+				sliceConv(reflect.ValueOf(arg.Index(i).Interface()))
+			}
+		} else if !arg.IsValid() {
+			out = append(out, nil)
+		} else {
+			out = append(out, arg.Interface())
 		}
-	} else {
-		out = append(out, arg.Interface())
+	}
+
+	for i := range args {
+		arg := args[i]
+		if rarg := reflect.ValueOf(arg); rarg.Kind() == reflect.Slice {
+			sliceConv(rarg)
+		} else {
+			out = append(out, arg)
+		}
 	}
 
 	return out
@@ -247,7 +262,7 @@ func Struct(strct interface{}, tagName ...string) []interface{} {
 
 		// slices - treat specially
 		if fieldValRaw.Kind() == reflect.Slice {
-			out = append(out, sliceConv(fieldValRaw)...)
+			out = append(out, FlattenArgs(fieldVal)...)
 			continue
 		}
 
