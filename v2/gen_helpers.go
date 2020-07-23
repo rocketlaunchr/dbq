@@ -298,11 +298,11 @@ func Qs(ctx context.Context, db interface{}, query string, ConcreteStruct interf
 // MustQs is a wrapper around the Qs function. It will panic upon encountering an error.
 // This can erradicate boiler-plate error handing code.
 func MustQs(ctx context.Context, db interface{}, query string, ConcreteStruct interface{}, options *Options, args ...interface{}) interface{} {
-	aRzLNT, XYeUCW := Qs(ctx, db, query, ConcreteStruct, options, args...)
-	if XYeUCW != nil {
-		panic(XYeUCW)
+	RjxAwn, wekrBE := Qs(ctx, db, query, ConcreteStruct, options, args...)
+	if wekrBE != nil {
+		panic(wekrBE)
 	}
-	return aRzLNT
+	return RjxAwn
 }
 
 func parseUintP(s string) *uint {
