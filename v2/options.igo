@@ -61,7 +61,8 @@ type Options struct {
 
 	// DecoderConfig is used to configure the decoder used by the mapstructure
 	// package. If it's not supplied, a default StructorConfig is assumed. This means
-	// WeaklyTypedInput is set to true and no DecodeHook is provided.
+	// WeaklyTypedInput is set to true and no DecodeHook is provided. Alternatively, if you require 
+	// a configuration for common time-based conversions, StdTimeConversionConfig is available.
 	//
 	// See: https://godoc.org/github.com/mitchellh/mapstructure
 	DecoderConfig *StructorConfig

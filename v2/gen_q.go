@@ -37,7 +37,7 @@ func MustQ(ctx context.Context, db interface{}, query string, options *Options, 
 // Each returned row (an item in the slice) contains a map where the keys are the columns, and
 // the values are the data for each column.
 // However, when a ConcreteStruct is provided via the options, the mapstructure package is used to automatically
-// return []*structs instead.
+// return []*struct instead. To bypass the mapstructure package, ScanFaster interface can be implemented.
 //
 // args is a list of values to replace the placeholders in the query. When an arg is a slice, the values of the slice
 // will automatically be flattened to a list of interface{}.
