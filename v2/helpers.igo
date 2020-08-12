@@ -43,12 +43,12 @@ func INSERT(tableName string, columns []string, rows int, dbtype ...Database) st
 }
 
 // Ph generates the placeholders for SQL queries.
-// For a bulk insert operation, rows is the number of rows you intend
-// to insert, and columnsN is the number of fields per row.
-// For the IN function, set rows to 1.
+// For a bulk insert operation, nRows is the number of rows you intend
+// to insert, and nCols is the number of fields per row.
+// For the IN function, set nRows to 1.
 // For PostgreSQL, you can use incr to increment the placeholder starting count.
 //
-// NOTE: The function panics if either columnsN or rows is 0.
+// NOTE: The function panics if either nCols or nRows is 0.
 //
 // Example:
 //
@@ -61,32 +61,32 @@ func INSERT(tableName string, columns []string, rows int, dbtype ...Database) st
 //  dbq.Ph(3, 2, 6, dbq.PostgreSQL)
 //  // Output: ($7,$8,$9),($10,$11,$12)
 //
-func Ph(columnsN, rows int, incr int, dbtype ...Database) string {
+func Ph(nCols, nRows int, incr int, dbtype ...Database) string {
 
 	var typ Database
 	if len(dbtype) > 0 {
 		typ = dbtype[0]
 	}
 
-	if columnsN == 0 {
-		panic(errors.New("columnsN must not be 0"))
+	if nCols == 0 {
+		panic(errors.New("nCols must not be 0"))
 	}
 
-	if rows == 0 {
-		panic(errors.New("rows must not be 0"))
+	if nRows == 0 {
+		panic(errors.New("nRows must not be 0"))
 	}
 
 	if typ == MySQL {
-		inner := "( " + strings.TrimSuffix(strings.Repeat("?,", columnsN), ",") + " ),"
-		return strings.TrimSuffix(strings.Repeat(inner, rows), ",")
+		inner := "( " + strings.TrimSuffix(strings.Repeat("?,", nCols), ",") + " ),"
+		return strings.TrimSuffix(strings.Repeat(inner, nRows), ",")
 	}
 
 	var singleValuesStr string
 
 	varCount := 1 + incr
-	for i := 1; i <= rows; i++ {
+	for i := 1; i <= nRows; i++ {
 		singleValuesStr = singleValuesStr + "("
-		for j := 1; j <= columnsN; j++ {
+		for j := 1; j <= nCols; j++ {
 			singleValuesStr = singleValuesStr + fmt.Sprintf("$%d,", varCount)
 			varCount++
 		}
