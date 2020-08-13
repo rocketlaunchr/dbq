@@ -34,7 +34,7 @@ Everyone knows that performing simple **DATABASE queries** in Go takes numerous 
 - [MySQL driver](https://github.com/go-sql-driver/mysql) OR
 - [PostgreSQL driver](https://github.com/lib/pq)
 
-**NOTE:** For mysql driver, `parseTime=true` setting can interfere with unmarshaling to `civil.*` types.
+**NOTE:** For mysql driver, `parseTime=true` setting can interfere with unmarshaling to [`civil.*`](https://pkg.go.dev/cloud.google.com/go/civil?tab=doc) types.
 
 ## Installation
 
@@ -154,7 +154,7 @@ results := dbq.MustQ(ctx, db, stmt, "A", "B", "C", 2, "D", "Brad Pitt", 45, time
 
 ```
 
-**NOTE** [FlattenArgs](https://godoc.org/github.com/rocketlaunchr/dbq/v2#FlattenArgs) can be used more generally.
+**NOTE:** [FlattenArgs](https://godoc.org/github.com/rocketlaunchr/dbq/v2#FlattenArgs) function can be used more generally.
 
 ### MySQL cancelation
 
