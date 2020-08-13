@@ -54,7 +54,7 @@ Let's assume a table called `users`:
 
 ### Query
 
-`dbq.Q` ordinarily returns `[]map[string]interface{}` results, but you can automatically
+[`Q`](https://godoc.org/github.com/rocketlaunchr/dbq/v2#Q) ordinarily returns `[]map[string]interface{}` results, but you can automatically
 unmarshal to a struct. You will need to type assert the results.
 
 ```go
@@ -184,7 +184,7 @@ if result == nil {
 
 ### PostUnmarshaler
 
-After fetching the results, you can further modify the results by implementing the `PostUnmarshaler` interface. The `PostUnmarshal` function must be attached to the pointer of the struct.
+After fetching the results, you can further modify the results by implementing the [`PostUnmarshaler`](https://godoc.org/github.com/rocketlaunchr/dbq/v2#PostUnmarshaler) interface. The `PostUnmarshal` function must be attached to the pointer of the struct.
 
 ```go
 type user struct {
@@ -203,7 +203,7 @@ func (u *user) PostUnmarshal(ctx context.Context, row, total int) error {
 
 ### ScanFaster
 
-The `ScanFaster` interface eradicates the use of the reflect package when unmarshaling. If you don't need to perform fancy time conversions or interpret weakly typed data, then it is more performant.
+The [`ScanFaster`](https://godoc.org/github.com/rocketlaunchr/dbq/v2#ScanFaster) interface eradicates the use of the reflect package when unmarshaling. If you don't need to perform fancy time conversions or interpret weakly typed data, then it is more performant.
 
 ```go
 type user struct {
