@@ -154,6 +154,8 @@ results := dbq.MustQ(ctx, db, stmt, "A", "B", "C", 2, "D", "Brad Pitt", 45, time
 
 ```
 
+**NOTE** [FlattenArgs](https://godoc.org/github.com/rocketlaunchr/dbq/v2#FlattenArgs) can be used more generally.
+
 ### MySQL cancelation
 
 To properly cancel a MySQL query, you need to use the [mysql-go](https://github.com/rocketlaunchr/mysql-go) package. `dbq` plays nicely with it.
