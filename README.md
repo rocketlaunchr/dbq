@@ -9,7 +9,7 @@
 
 (Now compatible with MySQL and PostgreSQL!)
 
-Everyone knows that performing simple **DATABASE queries** in Go takes numerous lines of code that is often repetitive. If you want to avoid the cruft, you have two options: A heavy-duty ORM that is not up to the standard of Laraval or Django. Or DBQ!
+Everyone knows that performing simple **DATABASE queries** in Go takes numerous lines of code that is often repetitive. If you want to avoid the cruft, you have two options: A heavy-duty ORM that is not up to the standard of Laravel or Django. Or DBQ!
 
 ⚠️ **WARNING: You will seriously reduce your database code to a few lines**
 
